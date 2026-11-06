@@ -1,0 +1,115 @@
+.kpis {
+  margin: 1.25rem 0;
+}
+
+.matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(179, 38, 30, calc(0.08 + var(--s) * 0.8));
+  animation: rise-in 0.5s var(--ease-out) both;
+
+  &.good {
+    background: rgba(30, 125, 58, calc(0.08 + var(--s) * 0.5));
+  }
+
+  strong {
+    font-size: 1.6rem;
+    color: var(--brand-900);
+  }
+
+  span {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.weights {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 1fr 44px;
+    gap: 0.75rem;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+}
+
+.track {
+  height: 8px;
+  border-radius: 8px;
+  background: var(--brand-50);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand-700), var(--sky-strong));
+    transition: width 0.9s var(--ease-out);
+
+    &.negative {
+      background: var(--success);
+    }
+  }
+}
+
+.segments {
+  margin-top: 1.25rem;
+
+  tbody tr {
+    cursor: default;
+  }
+}
+
+.chip.Watch {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.chip.Elevated {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.chip.Steady {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.spin {
+  width: 0;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  transition: width 0.2s, opacity 0.2s;
+
+  &.on {
+    width: 16px;
+    opacity: 1;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

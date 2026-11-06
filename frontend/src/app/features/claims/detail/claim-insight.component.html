@@ -1,0 +1,56 @@
+<article class="card insight">
+  <div class="row">
+    <h3>Claim intelligence</h3>
+    <span class="spacer"></span>
+    <app-status-badge [value]="assessment().lane" />
+  </div>
+  <div class="top">
+    <app-risk-gauge [value]="assessment().fraudProbability" />
+    <dl>
+      <div><dt>Model payout estimate</dt><dd class="money">{{ assessment().predictedPayout | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+      <div><dt>Loss anomaly (z-score)</dt><dd [class.warn]="assessment().anomalyScore >= 2.5">{{ assessment().anomalyScore }}</dd></div>
+      <div><dt>Priority</dt><dd>{{ assessment().priority }} / 100</dd></div>
+    </dl>
+  </div>
+
+  <div class="cause" [class.mismatch]="causeMismatch()">
+    <span>Text model reads the description as <strong>{{ assessment().predictedCause | label }}</strong>
+      ({{ assessment().causeConfidence | percent }})</span>
+    @if (causeMismatch()) {
+      <span class="chip alert">Differs from stated cause: {{ statedCause() | label }}</span>
+    }
+  </div>
+
+  <h4>Why the model scored it this way</h4>
+  @if (assessment().topFactors.length) {
+    <ul class="factors">
+      @for (factor of assessment().topFactors; track factor.label) {
+        <li>
+          <span>{{ factor.label }}</span>
+          <div class="bar"><i [style.width.%]="(factor.impact / maxImpact()) * 100"></i></div>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="muted">No risk signal stands out for this claim.</p>
+  }
+
+  @if (neighborhood(); as near) {
+    <h4>Similar decided claims</h4>
+    @if (near.neighbors.length) {
+      <p class="muted">{{ near.approvalRate | percent }} of the closest matches were paid, at a median of
+        {{ near.medianPayoutRatio | percent }} of the estimate.</p>
+      <ul class="similar">
+        @for (claim of near.neighbors; track claim.id) {
+          <li>
+            <span>{{ claim.claimNumber }} · {{ claim.cause | label }}</span>
+            <span class="money">{{ claim.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+            <app-status-badge [value]="claim.status" />
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">No decided claims to compare with yet.</p>
+    }
+  }
+</article>

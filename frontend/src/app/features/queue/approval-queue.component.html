@@ -1,0 +1,51 @@
+<div class="page">
+  <p class="eyebrow">Adjuster workspace</p>
+  <h1>Approval queue</h1>
+  <p class="muted">Open claims sorted by priority. Priority weighs loss size, harvest downtime, season and fraud risk.</p>
+
+  <div class="board">
+    @for (column of lanes; track column.lane) {
+      <section class="column" [class]="'column ' + column.lane">
+        <header>
+          <h3>{{ column.title }} <span class="count">{{ byLane()[column.lane].length }}</span></h3>
+          <p class="muted">{{ column.blurb }}</p>
+        </header>
+        @if (claims() === null) {
+          <div class="skeleton" style="height: 120px"></div>
+        }
+        <div class="cards" [@listStagger]="byLane()[column.lane].length">
+          @for (claim of byLane()[column.lane]; track claim.id) {
+            <a class="ticket lift" [routerLink]="['/claims', claim.id]">
+              <div class="row">
+                <strong>{{ claim.claimNumber }}</strong>
+                <span class="spacer"></span>
+                <span class="priority" [style.--p]="claim.priority">{{ claim.priority }}</span>
+              </div>
+              <span>{{ claim.farmName }}</span>
+              <span class="muted small">{{ claim.equipmentName }} · {{ claim.cause | label }}</span>
+              <div class="row meta">
+                <span class="money">{{ claim.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+                <span class="muted small">risk {{ claim.fraudScore | percent }}</span>
+                <span class="spacer"></span>
+                <app-status-badge [value]="claim.status" />
+              </div>
+              @if (claim.harvestCritical) {
+                <span class="chip harvest">Harvest critical</span>
+              }
+              @if (column.lane === 'FAST_TRACK' && claim.predictedPayout) {
+                <button type="button" class="btn btn-success quick" [disabled]="approving() === claim.id"
+                        (click)="quickApprove(claim, $event)">
+                  Approve {{ claim.predictedPayout | currency: 'USD' : 'symbol' : '1.0-0' }}
+                </button>
+              }
+            </a>
+          } @empty {
+            @if (claims() !== null) {
+              <p class="muted empty">Nothing waiting here.</p>
+            }
+          }
+        </div>
+      </section>
+    }
+  </div>
+</div>

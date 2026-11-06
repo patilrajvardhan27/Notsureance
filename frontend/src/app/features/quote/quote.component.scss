@@ -1,0 +1,137 @@
+.hero {
+  color: #fff;
+  background: radial-gradient(circle at 15% 120%, rgba(127, 211, 247, 0.45), transparent 50%),
+    linear-gradient(120deg, var(--brand-950), var(--brand-700));
+
+  .inner {
+    padding-bottom: 4rem;
+  }
+
+  h1 {
+    color: #fff;
+    max-width: 20ch;
+  }
+
+  .eyebrow {
+    color: var(--sky);
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: -3rem;
+}
+
+.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--brand-700);
+}
+
+.segmented {
+  display: flex;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+
+  button {
+    flex: 1;
+    padding: 0.6rem 0.4rem;
+    border: 0;
+    background: var(--surface);
+    font: 600 0.92rem var(--font);
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s;
+
+    &.on {
+      background: var(--brand-700);
+      color: #fff;
+    }
+  }
+}
+
+.side {
+  display: grid;
+  gap: 1.25rem;
+  position: sticky;
+  top: 88px;
+}
+
+.price {
+  display: flex;
+  flex-direction: column;
+  border-top: 4px solid var(--brand-700);
+}
+
+.big {
+  font-size: 2.8rem;
+  color: var(--brand-900);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.adjustments {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.92rem;
+
+    &.save .money {
+      color: var(--success);
+      font-weight: 700;
+    }
+  }
+}
+
+.tips {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tip {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--success-bg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  strong {
+    color: var(--success);
+    white-space: nowrap;
+  }
+}
+
+.wide {
+  width: 100%;
+}
+
+.error {
+  color: var(--danger);
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: static;
+  }
+}

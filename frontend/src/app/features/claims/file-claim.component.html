@@ -1,0 +1,148 @@
+<div class="page narrow">
+  @if (result(); as done) {
+    <section class="card success" @popIn>
+      <p class="eyebrow">Claim filed</p>
+      <h1>{{ done.summary.claimNumber }}</h1>
+      <p class="muted">The scoring engine reviewed the claim the moment it was submitted.</p>
+      <div class="outcome">
+        <app-risk-gauge [value]="done.assessment.fraudProbability" />
+        <dl>
+          <div><dt>Triage lane</dt><dd><app-status-badge [value]="done.assessment.lane" /></dd></div>
+          <div><dt>Estimated payout</dt><dd class="money">{{ done.assessment.predictedPayout | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+          <div><dt>Priority</dt><dd>{{ done.assessment.priority }} / 100</dd></div>
+        </dl>
+      </div>
+      @if (done.assessment.lane === 'FAST_TRACK') {
+        <p class="banner">This claim qualifies for fast track. An adjuster can approve it without a field inspection.</p>
+      }
+      <div class="row">
+        <a class="btn btn-primary" [routerLink]="['/claims', done.summary.id]">Open claim and add photos</a>
+        <a class="btn btn-ghost" routerLink="/claims">Back to my claims</a>
+      </div>
+    </section>
+  } @else {
+    <p class="eyebrow">File a claim</p>
+    <h1>Tell us what happened</h1>
+
+    <ol class="stepper">
+      @for (label of steps; track label; let i = $index) {
+        <li [class.active]="step() === i" [class.done]="step() > i">
+          <span class="dot">{{ step() > i ? '✓' : i + 1 }}</span>{{ label }}
+        </li>
+      }
+    </ol>
+
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()">
+      @switch (step()) {
+        @case (0) {
+          <section @fadeSlide>
+            <h3>Which policy and machine?</h3>
+            <div class="choices" [@listStagger]="policies().length">
+              @for (policy of policies(); track policy.id) {
+                <button type="button" class="choice lift" [class.picked]="form.value.policyId === policy.id"
+                        (click)="choosePolicy(policy)">
+                  <strong>{{ policy.farmName }}</strong>
+                  <span class="muted">{{ policy.policyNumber }} · {{ policy.county }}, {{ policy.stateCode }}</span>
+                </button>
+              }
+            </div>
+            @if (equipment().length) {
+              <h3 class="sub">Equipment on this policy</h3>
+              <div class="choices" [@listStagger]="equipment().length">
+                @for (item of equipment(); track item.id) {
+                  <button type="button" class="choice lift" [class.picked]="form.value.equipmentId === item.id"
+                          (click)="form.patchValue({ equipmentId: item.id })">
+                    <strong>{{ item.displayName }}</strong>
+                    <span class="muted">{{ item.categoryLabel }} · insured {{ item.insuredValue | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+                    @if (item.gpsTracked) { <span class="chip">GPS tracked</span> }
+                  </button>
+                }
+              </div>
+            }
+          </section>
+        }
+        @case (1) {
+          <section @fadeSlide>
+            <h3>What caused the loss?</h3>
+            <div class="causes">
+              @for (cause of causes; track cause) {
+                <button type="button" class="cause" [class.picked]="form.value.cause === cause"
+                        (click)="form.patchValue({ cause })">{{ cause | label }}</button>
+              }
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label for="incidentDate">Date of incident</label>
+                <input id="incidentDate" class="input" type="date" formControlName="incidentDate" [max]="today" />
+              </div>
+              <label class="check harvest">
+                <input type="checkbox" formControlName="harvestCritical" />
+                <span><strong>Needed for planting or harvest right now</strong><br />
+                  <small class="muted">Moves the claim up the queue to limit downtime</small></span>
+              </label>
+            </div>
+          </section>
+        }
+        @case (2) {
+          <section @fadeSlide>
+            <div class="field">
+              <label for="description">Describe the damage</label>
+              <textarea id="description" class="input" formControlName="description" maxlength="2000"
+                        placeholder="Where it happened, what broke and what you saw"></textarea>
+              <span class="hint">{{ descriptionLength() }} / 2000 · at least 20 characters</span>
+            </div>
+            <div class="grid grid-2">
+              <div class="field">
+                <label for="estimatedLoss">Estimated repair or replacement cost (USD)</label>
+                <input id="estimatedLoss" class="input" type="number" min="100" step="100" formControlName="estimatedLoss" />
+                @if (form.controls.estimatedLoss.touched && form.controls.estimatedLoss.invalid) {
+                  <span class="error">Enter an amount between $100 and $5,000,000</span>
+                }
+              </div>
+              <div class="field">
+                <label>Where did it happen?</label>
+                <button type="button" class="btn btn-outline" (click)="useMyLocation()" [disabled]="locating()">
+                  {{ locating() ? 'Finding you…' : form.value.latitude ? 'Location captured' : 'Use my current location' }}
+                </button>
+                @if (form.value.latitude) {
+                  <span class="hint">{{ form.value.latitude }}, {{ form.value.longitude }}</span>
+                }
+              </div>
+            </div>
+          </section>
+        }
+        @case (3) {
+          <section @fadeSlide>
+            <h3>Review before you submit</h3>
+            <dl class="review">
+              <div><dt>Farm</dt><dd>{{ selectedPolicy()?.farmName }}</dd></div>
+              <div><dt>Equipment</dt><dd>{{ selectedEquipment()?.displayName }}</dd></div>
+              <div><dt>Cause</dt><dd>{{ form.value.cause | label }}</dd></div>
+              <div><dt>Date</dt><dd>{{ form.value.incidentDate | date: 'mediumDate' }}</dd></div>
+              <div><dt>Estimated loss</dt><dd>{{ form.value.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+              <div><dt>Deductible</dt><dd>{{ selectedPolicy()?.deductible | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+            </dl>
+            <p class="quote">“{{ form.value.description }}”</p>
+            @if (error()) {
+              <p class="banner danger" role="alert">{{ error() }}</p>
+            }
+          </section>
+        }
+      }
+
+      <div class="row actions">
+        @if (step() > 0) {
+          <button type="button" class="btn btn-ghost" (click)="back()">Back</button>
+        }
+        <span class="spacer"></span>
+        @if (step() < steps.length - 1) {
+          <button type="button" class="btn btn-primary" (click)="next()" [disabled]="!stepValid(step())">Continue</button>
+        } @else {
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            {{ submitting() ? 'Submitting…' : 'Submit claim' }}
+          </button>
+        }
+      </div>
+    </form>
+  }
+</div>

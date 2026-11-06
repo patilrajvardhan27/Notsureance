@@ -1,0 +1,44 @@
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="inner">
+    <a routerLink="/" aria-label="Notsureance home"><app-logo /></a>
+    <button class="burger" type="button" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()"
+            aria-controls="primary-nav">
+      <span></span><span></span><span></span>
+      <span class="sr-only">Menu</span>
+    </button>
+    <nav id="primary-nav" [class.open]="menuOpen()">
+      @for (link of links(); track link.path) {
+        <a [routerLink]="link.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.path === '/claims' }">
+          {{ link.label }}
+        </a>
+      }
+      <a routerLink="/quote" routerLinkActive="active">Get a quote</a>
+    </nav>
+    <div class="account">
+      @if (auth.user(); as user) {
+        <span class="avatar" [title]="user.fullName">{{ initials() }}</span>
+        <span class="who">
+          <strong>{{ user.fullName }}</strong>
+          <small>{{ user.role | label }}</small>
+        </span>
+        <button class="btn btn-ghost" type="button" (click)="auth.logout()">Sign out</button>
+      } @else {
+        <a class="btn btn-primary" routerLink="/login">Sign in</a>
+      }
+    </div>
+  </div>
+</header>
+
+<main id="main" [@routeTransition]="routeKey(outlet)">
+  <router-outlet #outlet="outlet" />
+</main>
+
+<footer class="footer">
+  <div class="inner">
+    <app-logo [light]="true" />
+    <p>Coverage for the machines that keep farms running. Claims filed in minutes, decided in days.</p>
+    <small>© {{ year }} Notsureance Agribusiness. Demo application with sample data.</small>
+  </div>
+</footer>
+<app-toast-outlet />

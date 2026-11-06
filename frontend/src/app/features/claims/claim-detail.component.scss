@@ -1,0 +1,81 @@
+.back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.harvest {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.main,
+.side {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.side {
+  position: sticky;
+  top: 88px;
+}
+
+.story {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem 1.5rem;
+  margin: 1.25rem 0 0;
+
+  dt {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+.policy p {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: static;
+  }
+}

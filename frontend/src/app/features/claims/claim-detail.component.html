@@ -1,0 +1,68 @@
+<div class="page">
+  <a routerLink="/claims" class="back">← All claims</a>
+  @if (claim(); as c) {
+    <header class="head rise-in">
+      <div>
+        <p class="eyebrow">{{ c.summary.cause | label }} · filed {{ c.reportedAt | date: 'mediumDate' }}</p>
+        <h1>{{ c.summary.claimNumber }}</h1>
+        <p class="muted">{{ c.policy.farmName }} · {{ c.equipment.displayName }}</p>
+      </div>
+      <div class="badges">
+        <app-status-badge [value]="c.summary.status" />
+        @if (c.summary.harvestCritical) {
+          <span class="chip harvest">Harvest critical</span>
+        }
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="main">
+        <article class="card">
+          <h3>What happened</h3>
+          <p class="story">{{ c.description }}</p>
+          <dl class="facts">
+            <div><dt>Incident date</dt><dd>{{ c.summary.incidentDate | date: 'mediumDate' }}</dd></div>
+            <div><dt>Estimated loss</dt><dd class="money">{{ c.summary.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+            <div><dt>Approved</dt><dd class="money">{{ c.approvedAmount !== null ? (c.approvedAmount | currency: 'USD' : 'symbol' : '1.0-0') : '—' }}</dd></div>
+            <div><dt>Deductible</dt><dd class="money">{{ c.policy.deductible | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+            <div><dt>Insured value</dt><dd class="money">{{ c.equipment.insuredValue | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
+            <div><dt>GPS tracked</dt><dd>{{ c.equipment.gpsTracked ? 'Yes' : 'No' }}</dd></div>
+            <div><dt>Filed by</dt><dd>{{ c.filedBy }}</dd></div>
+            <div><dt>Adjuster</dt><dd>{{ c.assignedAdjuster ?? 'Not assigned' }}</dd></div>
+            @if (c.latitude !== null) {
+              <div><dt>Location</dt><dd>{{ c.latitude }}, {{ c.longitude }}</dd></div>
+            }
+          </dl>
+          @if (c.decisionReason) {
+            <p class="banner">Decision note: {{ c.decisionReason }}</p>
+          }
+        </article>
+
+        @if (auth.hasRole('ADJUSTER')) {
+          <app-claim-insight [assessment]="c.assessment" [statedCause]="c.summary.cause" [neighborhood]="neighborhood()" />
+        }
+
+        <article class="card">
+          <h3>Timeline</h3>
+          <app-claim-timeline [entries]="c.timeline" />
+        </article>
+      </div>
+
+      <aside class="side">
+        <app-decision-panel [claim]="c" (updated)="refresh($event)" />
+        <app-document-panel [claimId]="c.summary.id" />
+        <article class="card policy">
+          <h3>Policy</h3>
+          <p><strong>{{ c.policy.policyNumber }}</strong><br />{{ c.policy.holderName }}</p>
+          <p class="muted">{{ c.policy.county }} County, {{ c.policy.stateCode }} · {{ c.policy.acreage }} acres</p>
+          <p class="muted">Covered {{ c.policy.effectiveDate | date: 'mediumDate' }} to {{ c.policy.expiryDate | date: 'mediumDate' }}</p>
+        </article>
+      </aside>
+    </div>
+  } @else if (missing()) {
+    <app-empty-state title="Claim not found" message="It may have been removed or you may not have access to it." />
+  } @else {
+    <div class="skeleton" style="height: 90px; margin: 1rem 0"></div>
+    <div class="skeleton" style="height: 320px"></div>
+  }
+</div>

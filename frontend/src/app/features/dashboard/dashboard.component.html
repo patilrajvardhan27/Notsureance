@@ -1,0 +1,89 @@
+<section class="welcome">
+  <div class="page inner">
+    <p class="eyebrow">{{ auth.user()?.role | label }} workspace</p>
+    <h1>{{ greeting() }}</h1>
+    <p>Here is how the book of farm equipment claims looks today.</p>
+    <div class="row">
+      @if (auth.hasRole('AGENT')) {
+        <a class="btn btn-primary" routerLink="/claims/new">File a new claim</a>
+        <a class="btn btn-outline light" routerLink="/leads">Work my leads</a>
+      } @else {
+        <a class="btn btn-primary" routerLink="/queue">Open approval queue</a>
+        <a class="btn btn-outline light" routerLink="/insights">Model insights</a>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="page">
+  @if (stats(); as s) {
+    <div class="grid grid-4 kpis">
+      <app-kpi-card label="Open claims" [value]="s.openClaims" [hint]="s.totalClaims + ' total on file'" />
+      <app-kpi-card label="Fast-track share" [value]="s.fastTrackShare" format="percent" accent="success"
+                    hint="Open claims cleared for quick approval" />
+      <app-kpi-card label="Approved payouts" [value]="s.approvedAmount" format="currency" accent="sky" />
+      <app-kpi-card label="New quote leads" [value]="s.newLeads" accent="warning" hint="Waiting for first contact" />
+    </div>
+
+    <div class="grid grid-2">
+      <article class="card">
+        <h3>Claim pipeline</h3>
+        @for (bar of statusBars(); track bar.status) {
+          <div class="bar-row">
+            <span>{{ bar.status | label }}</span>
+            <div class="bar"><i [style.width.%]="bar.width"></i></div>
+            <strong>{{ bar.count }}</strong>
+          </div>
+        }
+      </article>
+      <article class="card">
+        <h3>Open claims by triage lane</h3>
+        <div class="lanes">
+          @for (lane of lanes; track lane) {
+            <div class="lane lift" [class]="'lane lift ' + lane">
+              <strong>{{ s.openByLane[lane] }}</strong>
+              <app-status-badge [value]="lane" />
+            </div>
+          }
+        </div>
+        <p class="muted note">Lanes are set by the fraud model, loss anomaly score and claim size when a claim is filed.</p>
+      </article>
+    </div>
+  } @else {
+    <div class="grid grid-4 kpis">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <div class="skeleton" style="height: 112px"></div>
+      }
+    </div>
+  }
+
+  <div class="grid grid-2 lower">
+    <article class="card">
+      <div class="row"><h3>Latest claims</h3><span class="spacer"></span><a routerLink="/claims">View all</a></div>
+      <ul class="recent" [@listStagger]="recent().length">
+        @for (claim of recent(); track claim.id) {
+          <li (click)="open(claim)" (keydown.enter)="open(claim)" tabindex="0">
+            <div>
+              <strong>{{ claim.claimNumber }}</strong>
+              <span class="muted">{{ claim.farmName }} · {{ claim.cause | label }}</span>
+            </div>
+            <span class="money">{{ claim.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+            <app-status-badge [value]="claim.status" />
+          </li>
+        }
+      </ul>
+    </article>
+    <article class="card">
+      <h3>Portfolio risk segments</h3>
+      <p class="muted">Policies grouped with k-means on fleet value, equipment age, claim history and GPS coverage.</p>
+      <div class="segments" [@listStagger]="segments().length">
+        @for (segment of segments(); track segment.name) {
+          <div class="segment" [class]="'segment ' + segment.name">
+            <div class="row"><strong>{{ segment.name }}</strong><span class="chip">{{ segment.policyCount }} policies</span></div>
+            <span class="muted">{{ segment.recommendedPlay }}</span>
+          </div>
+        }
+      </div>
+    </article>
+  </div>
+</div>

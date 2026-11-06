@@ -1,0 +1,115 @@
+<section class="hero">
+  <div class="page inner">
+    <p class="eyebrow">Farm equipment coverage</p>
+    <h1>Price your fleet in under a minute.</h1>
+    <p>No account and no phone call needed. See exactly which discounts apply and how to lower your premium.</p>
+  </div>
+</section>
+
+<div class="page layout">
+  <form class="card" [formGroup]="quoteForm" aria-label="Quote details">
+    <h3>Your equipment</h3>
+    <div class="field">
+      <label for="category">Type</label>
+      <select id="category" class="input" formControlName="category">
+        @for (category of categories; track category.value) {
+          <option [value]="category.value">{{ category.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="value">Replacement value: <strong>{{ quoteForm.value.equipmentValue | currency: 'USD' : 'symbol' : '1.0-0' }}</strong></label>
+      <input id="value" type="range" min="5000" max="1000000" step="5000" formControlName="equipmentValue" />
+    </div>
+    <div class="grid two">
+      <div class="field">
+        <label for="year">Model year</label>
+        <input id="year" class="input" type="number" formControlName="modelYear" [max]="currentYear + 1" min="1980" />
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <select id="state" class="input" formControlName="stateCode">
+          @for (state of states; track state) {
+            <option [value]="state">{{ state }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Deductible</label>
+      <div class="segmented" role="group" aria-label="Deductible">
+        @for (amount of deductibles; track amount) {
+          <button type="button" [class.on]="quoteForm.value.deductible === amount" (click)="setDeductible(amount)">
+            {{ amount | currency: 'USD' : 'symbol' : '1.0-0' }}
+          </button>
+        }
+      </div>
+    </div>
+    <h3>Ways to save</h3>
+    <label class="check"><input type="checkbox" formControlName="gpsTracked" /> GPS anti-theft tracking installed</label>
+    <label class="check"><input type="checkbox" formControlName="safetyTraining" /> Operators completed safety training</label>
+    <label class="check"><input type="checkbox" formControlName="bundleFarmPolicy" /> Bundle with a farm and ranch policy</label>
+    <div class="grid two">
+      <div class="field">
+        <label for="units">Other insured machines</label>
+        <input id="units" class="input" type="number" min="0" max="50" formControlName="otherInsuredUnits" />
+      </div>
+      <div class="field">
+        <label for="claimFree">Years without a claim</label>
+        <input id="claimFree" class="input" type="number" min="0" max="20" formControlName="claimFreeYears" />
+      </div>
+    </div>
+  </form>
+
+  <aside class="side">
+    @if (result(); as r) {
+      <article class="card price" @popIn>
+        <span class="eyebrow">Estimated premium</span>
+        <strong class="big" [appCountUp]="r.annualPremium" format="currency">$0</strong>
+        <span class="muted">per year · about {{ r.monthlyPremium | currency: 'USD' : 'symbol' : '1.0-0' }} a month</span>
+        <ul class="adjustments" [@listStagger]="r.adjustments.length">
+          <li><span>Base rate</span><span class="money">{{ r.basePremium | currency: 'USD' : 'symbol' : '1.0-0' }}</span></li>
+          @for (item of r.adjustments; track item.label) {
+            <li [class.save]="item.amount < 0">
+              <span>{{ item.label }}</span>
+              <span class="money">{{ item.amount > 0 ? '+' : '' }}{{ item.amount | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+            </li>
+          }
+        </ul>
+      </article>
+      @if (r.suggestions.length) {
+        <article class="card tips">
+          <h3>Lower it further</h3>
+          @for (tip of r.suggestions; track tip.action) {
+            <button type="button" class="tip lift" (click)="applySuggestion(tip.action)">
+              <span>{{ tip.action }}</span><strong>save {{ tip.annualSavings | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
+            </button>
+          }
+        </article>
+      }
+    } @else {
+      <div class="skeleton" style="height: 260px"></div>
+    }
+
+    <article class="card" [formGroup]="leadForm">
+      @if (receipt(); as done) {
+        <div @popIn>
+          <h3>You are all set</h3>
+          <p>{{ done.assignedAgent ?? 'An agent' }} will reach out within one business day to finalize coverage.</p>
+        </div>
+      } @else {
+        <h3>Lock in this quote</h3>
+        <div class="field"><label for="name">Full name</label><input id="name" class="input" formControlName="fullName" autocomplete="name" /></div>
+        <div class="field"><label for="leadEmail">Email</label><input id="leadEmail" class="input" type="email" formControlName="email" autocomplete="email" /></div>
+        <div class="field"><label for="phone">Phone (optional)</label><input id="phone" class="input" type="tel" formControlName="phone" autocomplete="tel" /></div>
+        <label class="check"><input type="checkbox" formControlName="consentToContact" /> An agent may contact me about this quote</label>
+        @if (leadError()) {
+          <p class="error" @expand>{{ leadError() }}</p>
+        }
+        <button type="button" class="btn btn-primary wide" (click)="requestCallback()" [disabled]="sending()">
+          {{ sending() ? 'Sending…' : 'Talk to an agent' }}
+        </button>
+      }
+    </article>
+  </aside>
+</div>

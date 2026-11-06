@@ -1,0 +1,86 @@
+<div class="page">
+  <div class="row head">
+    <div>
+      <p class="eyebrow">Track</p>
+      <h1>{{ auth.hasRole('AGENT') ? 'My claims' : 'All claims' }}</h1>
+    </div>
+    <span class="spacer"></span>
+    @if (auth.hasRole('AGENT')) {
+      <a class="btn btn-primary" routerLink="/claims/new">File a claim</a>
+    }
+  </div>
+
+  <form class="card filters" [formGroup]="filters">
+    <input class="input" type="search" formControlName="q" placeholder="Search claim number, farm or description"
+           aria-label="Search claims" maxlength="80" />
+    <select class="input" formControlName="status" aria-label="Status">
+      <option value="">Any status</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ status | label }}</option>
+      }
+    </select>
+    <select class="input" formControlName="lane" aria-label="Triage lane">
+      <option value="">Any lane</option>
+      @for (lane of lanes; track lane) {
+        <option [value]="lane">{{ lane | label }}</option>
+      }
+    </select>
+    <select class="input" formControlName="sort" aria-label="Sort">
+      @for (sort of sorts; track sort.value) {
+        <option [value]="sort.value">{{ sort.label }}</option>
+      }
+    </select>
+  </form>
+
+  <div class="card list" [class.loading]="loading()">
+    @if (page(); as p) {
+      @if (p.items.length === 0) {
+        <app-empty-state title="No claims match" message="Try a different search or clear the filters." />
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Claim</th><th>Farm and equipment</th><th>Cause</th><th>Loss</th><th>Fraud risk</th>
+                <th>Lane</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody [@listStagger]="p.items.length + '-' + p.page">
+              @for (claim of p.items; track claim.id) {
+                <tr (click)="open(claim)" (keydown.enter)="open(claim)" tabindex="0">
+                  <td>
+                    <strong>{{ claim.claimNumber }}</strong>
+                    <div class="muted small">{{ claim.incidentDate | date: 'mediumDate' }}</div>
+                  </td>
+                  <td>{{ claim.farmName }}<div class="muted small">{{ claim.equipmentName }}</div></td>
+                  <td>{{ claim.cause | label }} @if (claim.harvestCritical) {<span class="chip harvest">Harvest</span>}</td>
+                  <td class="money">{{ claim.estimatedLoss | currency: 'USD' : 'symbol' : '1.0-0' }}</td>
+                  <td>
+                    @if (claim.fraudScore !== null) {
+                      <div class="meter" [title]="(claim.fraudScore | percent) ?? ''">
+                        <i [style.width.%]="claim.fraudScore * 100" [class.hot]="claim.fraudScore >= 0.4"></i>
+                      </div>
+                    }
+                  </td>
+                  <td><app-status-badge [value]="claim.lane" /></td>
+                  <td><app-status-badge [value]="claim.status" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="row pager">
+          <span class="muted">{{ p.totalItems }} claims</span>
+          <span class="spacer"></span>
+          <button class="btn btn-ghost" type="button" [disabled]="p.page === 0" (click)="goTo(p.page - 1)">Previous</button>
+          <span>Page {{ p.page + 1 }} of {{ p.totalPages || 1 }}</span>
+          <button class="btn btn-ghost" type="button" [disabled]="p.page + 1 >= p.totalPages" (click)="goTo(p.page + 1)">Next</button>
+        </div>
+      }
+    } @else {
+      @for (n of [1, 2, 3, 4, 5]; track n) {
+        <div class="skeleton row-skeleton"></div>
+      }
+    }
+  </div>
+</div>

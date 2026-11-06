@@ -1,0 +1,133 @@
+.split {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  min-height: calc(100vh - 200px);
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 4rem 3rem;
+  color: #fff;
+  background: radial-gradient(circle at 80% 10%, rgba(127, 211, 247, 0.35), transparent 40%),
+    linear-gradient(140deg, var(--brand-950), var(--brand-700));
+
+  h1 {
+    color: #fff;
+    max-width: 14ch;
+  }
+
+  .eyebrow {
+    color: var(--sky);
+  }
+
+  p {
+    max-width: 44ch;
+    opacity: 0.9;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+
+    li {
+      animation: rise-in 0.6s var(--ease-out) both;
+
+      &:nth-child(2) {
+        animation-delay: 0.12s;
+      }
+
+      &:nth-child(3) {
+        animation-delay: 0.24s;
+      }
+    }
+  }
+}
+
+.field {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  width: 100%;
+
+  path {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.25);
+    stroke-width: 3;
+    stroke-dasharray: 700;
+    animation: draw 2.4s var(--ease-out) both;
+  }
+
+  circle {
+    fill: var(--sky);
+    animation: float 5s ease-in-out infinite;
+  }
+}
+
+.panel {
+  padding: 4rem 3rem;
+  max-width: 480px;
+  width: 100%;
+  justify-self: center;
+}
+
+.wide {
+  width: 100%;
+}
+
+.danger {
+  background: var(--danger-bg);
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+.demo {
+  display: grid;
+  gap: 0.6rem;
+  margin: 2rem 0 1rem;
+}
+
+.demo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--brand-200);
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  span {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+}
+
+.small {
+  font-size: 0.9rem;
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 700;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .hero,
+  .panel {
+    padding: 2.5rem 1.25rem;
+  }
+}

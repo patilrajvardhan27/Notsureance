@@ -1,0 +1,105 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.column {
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--brand-50);
+  border-top: 4px solid var(--brand-700);
+
+  &.FAST_TRACK {
+    border-top-color: var(--success);
+  }
+
+  &.SPECIAL_INVESTIGATION {
+    border-top-color: var(--danger);
+  }
+
+  header p {
+    font-size: 0.88rem;
+  }
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  margin-left: 0.35rem;
+  border-radius: 13px;
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+
+.cards {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.priority {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brand-900);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--brand-700) calc(var(--p) * 1%), var(--brand-100) 0);
+    -webkit-mask: radial-gradient(circle, transparent 12px, #000 13px);
+    mask: radial-gradient(circle, transparent 12px, #000 13px);
+  }
+}
+
+.small {
+  font-size: 0.82rem;
+}
+
+.meta {
+  margin-top: 0.3rem;
+}
+
+.harvest {
+  align-self: flex-start;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.quick {
+  margin-top: 0.5rem;
+  min-height: 38px;
+}
+
+.empty {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+@media (max-width: 960px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+}

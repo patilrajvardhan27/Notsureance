@@ -1,0 +1,82 @@
+<div class="page">
+  <div class="row">
+    <div>
+      <p class="eyebrow">Machine learning</p>
+      <h1>Model insights</h1>
+      @if (report(); as r) {
+        <p class="muted">Trained {{ r.trainedAt | date: 'medium' }} on {{ r.syntheticSamples | number }} synthetic claims
+          and {{ r.feedbackSamples }} real adjuster decisions. Retrains nightly.</p>
+      }
+    </div>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" type="button" (click)="retrain()" [disabled]="training()">
+      <span class="spin" [class.on]="training()"></span>{{ training() ? 'Training…' : 'Retrain now' }}
+    </button>
+  </div>
+
+  @if (report(); as r) {
+    <div class="grid grid-4 kpis">
+      <app-kpi-card label="Fraud ROC AUC (holdout)" [value]="r.fraudHoldout.rocAuc" format="percent" />
+      <app-kpi-card label="Fraud AUC (5-fold CV)" [value]="r.fraudCrossValidatedAuc" format="percent" accent="sky" />
+      <app-kpi-card label="Fraud recall" [value]="r.fraudHoldout.recall" format="percent" accent="warning"
+                    hint="Share of fraud the model catches" />
+      <app-kpi-card label="Payout model R²" [value]="r.payoutHoldout.rSquared" format="percent" accent="success"
+                    [hint]="'MAE ' + (r.payoutHoldout.meanAbsoluteError | percent: '1.1-1') + ' of estimate'" />
+    </div>
+
+    <div class="grid grid-2">
+      <article class="card">
+        <h3>Fraud classifier confusion matrix</h3>
+        <p class="muted">Logistic regression with class weighting, prior correction and L2 regularization, scored at the investigation threshold.</p>
+        <div class="matrix">
+          @for (cell of matrix(); track cell.label) {
+            <div class="cell" [class.good]="cell.good" [style.--s]="cell.share">
+              <strong>{{ cell.value }}</strong><span>{{ cell.label }}</span>
+            </div>
+          }
+        </div>
+        <p class="muted small">Precision {{ r.fraudHoldout.precision | percent }} · F1 {{ r.fraudHoldout.f1 | number: '1.2-2' }}
+          · accuracy {{ r.fraudHoldout.accuracy | percent }} · cause text model {{ r.causeTextAccuracy | percent }}</p>
+      </article>
+
+      <article class="card">
+        <h3>What the fraud model learned</h3>
+        <p class="muted">Standardized coefficients. Longer bars move the score more.</p>
+        <ul class="weights" [@listStagger]="r.fraudFeatureWeights.length">
+          @for (item of r.fraudFeatureWeights; track item.feature) {
+            <li>
+              <span>{{ item.feature }}</span>
+              <div class="track">
+                <i [class.negative]="item.weight < 0" [style.width.%]="(item.weight < 0 ? -item.weight : item.weight) / maxWeight() * 100"></i>
+              </div>
+              <small>{{ item.weight | number: '1.2-2' }}</small>
+            </li>
+          }
+        </ul>
+      </article>
+    </div>
+  } @else {
+    <div class="skeleton" style="height: 320px; margin-top: 1.25rem"></div>
+  }
+
+  <article class="card segments">
+    <h3>Portfolio segments (k-means, k = 3)</h3>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Segment</th><th>Policies</th><th>Avg claims</th><th>Avg fraud score</th><th>GPS coverage</th><th>Recommended play</th></tr></thead>
+        <tbody [@listStagger]="segments().length">
+          @for (segment of segments(); track segment.name) {
+            <tr>
+              <td><span class="chip" [class]="'chip ' + segment.name">{{ segment.name }}</span></td>
+              <td>{{ segment.policyCount }}</td>
+              <td>{{ segment.averageClaims | number: '1.1-1' }}</td>
+              <td>{{ segment.averageFraudScore | percent }}</td>
+              <td>{{ segment.gpsShare | percent }}</td>
+              <td>{{ segment.recommendedPlay }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </article>
+</div>

@@ -1,0 +1,51 @@
+<article class="card panel" [formGroup]="form">
+  @if (auth.hasRole('ADJUSTER')) {
+    <h3>Decision</h3>
+    @if (options().length) {
+      <div class="row">
+        @for (option of options(); track option.action) {
+          <button type="button" class="btn" [class]="'btn ' + option.style" [class.selected]="chosen() === option.action"
+                  [disabled]="busy()" (click)="choose(option.action)">{{ option.label }}</button>
+        }
+      </div>
+      @if (chosen() === 'APPROVE' || needsNote()) {
+        <div class="form" @expand>
+          @if (chosen() === 'APPROVE') {
+            <div class="field">
+              <label for="amount">Approved amount (USD)</label>
+              <input id="amount" class="input" type="number" min="1" step="50" formControlName="amount" />
+              <span class="hint">Model estimate {{ claim().assessment.predictedPayout | currency: 'USD' : 'symbol' : '1.0-0' }}
+                · coverage limit {{ claim().policy.coverageLimit | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+            </div>
+          }
+          <div class="field">
+            <label for="note">{{ chosen() === 'REQUEST_INFO' ? 'What do you need from the agent?' : 'Note' }}</label>
+            <textarea id="note" class="input" formControlName="note" maxlength="1000"></textarea>
+          </div>
+          @if (chosen() === 'DENY') {
+            <label class="check"><input type="checkbox" formControlName="suspectedFraud" /> Confirmed fraud (feeds model retraining)</label>
+          }
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="confirm()">
+            {{ busy() ? 'Saving…' : 'Confirm' }}
+          </button>
+        </div>
+      }
+    } @else {
+      <p class="muted">This claim is closed. No further actions.</p>
+    }
+  } @else if (claim().summary.status === 'NEEDS_INFO') {
+    <h3>The adjuster needs more information</h3>
+    <div class="field">
+      <label for="reply">Your response</label>
+      <textarea id="reply" class="input" formControlName="note" maxlength="1000"
+                placeholder="Answer the question and attach any photos or invoices below"></textarea>
+    </div>
+    <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="respond()">Send to adjuster</button>
+  } @else {
+    <h3>Status</h3>
+    <p class="muted">No action needed from you right now. We will notify you when the status changes.</p>
+  }
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</article>
