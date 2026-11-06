@@ -5,7 +5,7 @@ RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npx ng build --configuration production
 
-FROM maven:3.9-eclipse-temurin-21 AS api
+FROM maven:3.9-eclipse-temurin-26 AS api
 WORKDIR /api
 COPY backend/pom.xml backend/dependency-check-suppressions.xml ./
 RUN mvn -B -q dependency:go-offline
