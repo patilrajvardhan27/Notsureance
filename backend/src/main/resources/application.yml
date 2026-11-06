@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: notsureance-claims
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/notsureance}
+    username: ${DATABASE_USER:notsureance}
+    password: ${DATABASE_PASSWORD:notsureance}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:}
+    issuer: notsureance
+    token-ttl: ${TOKEN_TTL:60m}
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
+    requests-per-minute: ${RATE_LIMIT_PER_MINUTE:10}
+  triage:
+    fast-track-max-loss: 25000
+    fast-track-max-fraud: 0.2
+    investigation-min-fraud: 0.6
+    anomaly-threshold: 2.5
+  ml:
+    synthetic-samples: 3000
+    retrain-cron: "0 0 3 * * *"
