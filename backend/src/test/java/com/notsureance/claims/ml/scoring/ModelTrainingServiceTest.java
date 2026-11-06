@@ -23,9 +23,10 @@ class ModelTrainingServiceTest {
     @BeforeAll
     static void train() {
         registry = new ModelRegistry();
-        ModelTrainingService trainer = new ModelTrainingService(registry, List::of, event -> { }, CLOCK, 2000);
+        TriageSettings settings = new TriageSettings(0, 0, 0, 0);
+        ModelTrainingService trainer = new ModelTrainingService(registry, List::of, event -> { }, CLOCK, settings, 2000);
         report = trainer.retrain();
-        scoring = new ClaimScoringService(registry, trainer, new TriagePolicy(new TriageSettings(0, 0, 0, 0)));
+        scoring = new ClaimScoringService(registry, trainer, new TriagePolicy(settings));
     }
 
     @Test
@@ -34,6 +35,7 @@ class ModelTrainingServiceTest {
         assertThat(report.fraudCrossValidatedAuc()).isGreaterThan(0.8);
         assertThat(report.causeTextAccuracy()).isGreaterThan(0.85);
         assertThat(report.payoutHoldout().rSquared()).isGreaterThan(0.5);
+        assertThat(report.fraudHoldout().recall()).isGreaterThan(0.6);
         assertThat(report.fraudFeatureWeights()).hasSize(ClaimFeatures.FRAUD_FEATURE_LABELS.size());
     }
 
@@ -54,7 +56,7 @@ class ModelTrainingServiceTest {
                 "Engine seized and the tractor will not start.");
         ClaimAssessment assessment = scoring.assess(suspicious);
 
-        assertThat(assessment.fraudProbability()).isGreaterThan(0.6);
+        assertThat(assessment.fraudProbability()).isGreaterThan(0.4);
         assertThat(assessment.lane()).isEqualTo(TriageLane.SPECIAL_INVESTIGATION);
         assertThat(assessment.topFactors()).isNotEmpty();
     }

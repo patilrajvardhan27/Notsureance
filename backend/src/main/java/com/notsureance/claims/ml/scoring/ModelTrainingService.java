@@ -35,15 +35,17 @@ public class ModelTrainingService {
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final int syntheticSamples;
+    private final double threshold;
 
     public ModelTrainingService(ModelRegistry registry, TrainingFeedbackSource feedbackSource,
-                                ApplicationEventPublisher events, Clock clock,
+                                ApplicationEventPublisher events, Clock clock, TriageSettings triage,
                                 @Value("${app.ml.synthetic-samples:3000}") int syntheticSamples) {
         this.registry = registry;
         this.feedbackSource = feedbackSource;
         this.events = events;
         this.clock = clock;
         this.syntheticSamples = syntheticSamples;
+        this.threshold = triage.investigationMinFraud();
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -78,7 +80,7 @@ public class ModelTrainingService {
                 LogisticRegression.Options.defaults());
         double[][] testX = fraudScaler.transformAll(fraudMatrix(test, causeModel));
         double[] testScores = IntStream.range(0, testX.length).mapToDouble(i -> fraudModel.probability(testX[i])).toArray();
-        ClassificationMetrics fraudMetrics = ClassificationMetrics.evaluate(testScores, labels(test), 0.5);
+        ClassificationMetrics fraudMetrics = ClassificationMetrics.evaluate(testScores, labels(test), threshold);
 
         List<LabeledClaim> honestTrain = train.stream().filter(c -> !c.fraud()).toList();
         List<LabeledClaim> honestTest = test.stream().filter(c -> !c.fraud()).toList();
@@ -111,7 +113,7 @@ public class ModelTrainingService {
             LogisticRegression model = LogisticRegression.fit(scaler.transformAll(foldTrain),
                     IntStream.of(trainIdx).map(i -> y[i]).toArray(), LogisticRegression.Options.defaults());
             double[] scores = IntStream.of(testIdx).mapToDouble(i -> model.probability(scaler.transform(x[i]))).toArray();
-            total += ClassificationMetrics.evaluate(scores, IntStream.of(testIdx).map(i -> y[i]).toArray(), 0.5).rocAuc();
+            total += ClassificationMetrics.evaluate(scores, IntStream.of(testIdx).map(i -> y[i]).toArray(), threshold).rocAuc();
         }
         return total / FOLDS;
     }

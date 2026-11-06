@@ -19,7 +19,7 @@ public class TriagePolicy {
         boolean smallAndClean = signals.estimatedLoss() <= settings.fastTrackMaxLoss()
                 && fraudProbability < settings.fastTrackMaxFraud()
                 && anomalyScore < settings.anomalyThreshold()
-                && signals.priorClaims() == 0;
+                && signals.priorClaims() <= 1;
         return smallAndClean ? TriageLane.FAST_TRACK : TriageLane.STANDARD;
     }
 

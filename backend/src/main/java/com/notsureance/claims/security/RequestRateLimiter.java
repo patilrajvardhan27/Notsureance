@@ -24,11 +24,15 @@ public class RequestRateLimiter {
     }
 
     public void checkAllowed(String clientKey) {
+        checkAllowed(clientKey, maxAttempts);
+    }
+
+    public void checkAllowed(String clientKey, int limit) {
         long now = clock.millis();
         Deque<Long> attempts = attemptsByClient.computeIfAbsent(clientKey, key -> new ArrayDeque<>());
         synchronized (attempts) {
             dropExpired(attempts, now);
-            if (attempts.size() >= maxAttempts) {
+            if (attempts.size() >= limit) {
                 throw new RateLimitExceededException();
             }
             attempts.addLast(now);

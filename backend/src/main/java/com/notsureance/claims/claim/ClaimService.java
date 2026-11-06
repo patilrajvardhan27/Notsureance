@@ -65,7 +65,7 @@ public class ClaimService {
         ClaimAssessment assessment = scoring.assess(signalsFactory.from(claim));
         claim.applyScore(ClaimScore.from(assessment));
         claims.save(claim);
-        events.save(new ClaimEvent(claim, agent, ClaimEventType.FILED, null, ClaimStatus.SUBMITTED, "Claim filed"));
+        events.save(new ClaimEvent(claim, agent, ClaimEventType.FILED, null, ClaimStatus.SUBMITTED, null));
         events.save(new ClaimEvent(claim, null, ClaimEventType.SCORED, null, null, describe(assessment)));
         return toDetail(claim, assessment, user);
     }

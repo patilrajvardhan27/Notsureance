@@ -72,7 +72,7 @@ INSERT INTO claims (claim_number, policy_id, equipment_id, filed_by, assigned_ad
      96000, NULL, FALSE, NULL, NULL, NULL, 0, NULL, FALSE, now() - interval '7 days');
 
 INSERT INTO claim_events (claim_id, actor_id, event_type, from_status, to_status, note, created_at)
-SELECT id, filed_by, 'FILED', NULL, 'SUBMITTED', 'Claim filed', created_at FROM claims;
+SELECT id, filed_by, 'FILED', NULL, 'SUBMITTED', NULL, created_at FROM claims;
 
 INSERT INTO claim_events (claim_id, actor_id, event_type, from_status, to_status, note, created_at)
 SELECT id, assigned_adjuster, 'STATUS_CHANGED', 'SUBMITTED', 'UNDER_REVIEW', NULL, created_at + interval '1 day'

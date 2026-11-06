@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class QuoteController {
 
+    private static final int QUOTES_PER_MINUTE = 60;
+
     private final PremiumCalculator calculator;
     private final LeadService leadService;
     private final RequestRateLimiter rateLimiter;
@@ -52,7 +54,7 @@ public class QuoteController {
 
     @PostMapping("/quotes")
     public QuoteResult quote(@Valid @RequestBody QuoteRequest request, HttpServletRequest http) {
-        rateLimiter.checkAllowed("quote:" + http.getRemoteAddr());
+        rateLimiter.checkAllowed("quote:" + http.getRemoteAddr(), QUOTES_PER_MINUTE);
         return calculator.quote(request);
     }
 

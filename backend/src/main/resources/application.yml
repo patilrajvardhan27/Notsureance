@@ -60,7 +60,7 @@ app:
   triage:
     fast-track-max-loss: 25000
     fast-track-max-fraud: 0.2
-    investigation-min-fraud: 0.6
+    investigation-min-fraud: 0.4
     anomaly-threshold: 2.5
   ml:
     synthetic-samples: 3000

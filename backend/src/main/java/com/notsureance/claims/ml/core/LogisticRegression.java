@@ -45,7 +45,7 @@ public final class LogisticRegression {
             }
             bias -= options.learningRate() * biasGradient / totalWeight;
         }
-        return new LogisticRegression(weights, bias);
+        return new LogisticRegression(weights, bias - Math.log(positiveWeight));
     }
 
     public double probability(double[] x) {
