@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081538"/>
+      <stop offset="1" stop-color="#0047BB"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.1" r="0.5">
+      <stop offset="0" stop-color="#7FD3F7" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7FD3F7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="300" fill="url(#sky)"/>
+  <rect width="1200" height="300" fill="url(#glow)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3">
+    <path d="M0 290 C300 200 900 200 1200 290"/>
+    <path d="M0 260 C320 170 880 170 1200 260"/>
+    <path d="M0 230 C340 140 860 140 1200 230"/>
+  </g>
+  <circle cx="1040" cy="70" r="26" fill="#7FD3F7"/>
+  <g transform="translate(80 78) scale(2.3)">
+    <path d="M32 4 8 13v17c0 15 10 26 24 30 14-4 24-15 24-30V13L32 4Z" fill="#FFFFFF"/>
+    <path d="M17 40c6-7 24-7 30 0M19 33c6-6 20-6 26 0M22 26c5-4 15-4 20 0" stroke="#0047BB" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <circle cx="32" cy="18" r="3.4" fill="#7FD3F7"/>
+  </g>
+  <text x="250" y="140" font-family="Source Sans 3, Segoe UI, Arial, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF">Notsureance</text>
+  <text x="252" y="188" font-family="Source Sans 3, Segoe UI, Arial, sans-serif" font-size="26" fill="#C7DBF7">Farm equipment claims for Commercial Agribusiness</text>
+  <text x="252" y="226" font-family="Source Sans 3, Segoe UI, Arial, sans-serif" font-size="18" fill="#7FD3F7" letter-spacing="2">FILE · TRIAGE · APPROVE · LEARN</text>
+</svg>
