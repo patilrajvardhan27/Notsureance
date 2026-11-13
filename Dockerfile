@@ -13,7 +13,7 @@ COPY backend/src ./src
 COPY --from=web /web/dist/notsureance-web/browser ./src/main/resources/static
 RUN mvn -B -q package -DskipTests
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=api /api/target/claims-api.jar app.jar
