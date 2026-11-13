@@ -64,6 +64,10 @@ public class AgentService {
         if (model == null) {
             throw new AgentUnavailableException();
         }
+        return runWith(model, claimId, question, user);
+    }
+
+    public RunView runWith(ChatModel model, Long claimId, String question, AuthenticatedUser user) {
         ClaimSummary claim = claimService.detail(claimId, user).summary();
         String asked = question == null || question.isBlank() ? "What should I do with this claim?" : question.trim();
         AgentRun run = runs.save(new AgentRun(claimId, user.id(), asked, properties.modelLabel()));
