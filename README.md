@@ -12,13 +12,15 @@
 Farm equipment insurance claims for a Commercial Agribusiness team. Agents file claims for damaged tractors, combines,
 sprayers and pivots from the field. Every claim is scored the moment it lands: fraud risk, expected payout, loss
 anomaly and the most likely cause read from the description. Adjusters work a priority queue, fast-track clean losses
-with one click and send suspicious ones to investigation. Their decisions feed the models back on a nightly retrain.
+with one click and send suspicious ones to investigation. A tool-calling claims agent reads the claim, similar claims,
+a Neo4j fraud-ring graph and the policy wording, then proposes an action that an adjuster must approve. Everyone signs
+in with Microsoft Entra ID, and a Power BI report reads read-only views. All data is synthetic.
 
 | Dashboard | Claim intelligence |
 | --- | --- |
 | ![Dashboard](docs/assets/dashboard.png) | ![Claim detail](docs/assets/claim-detail.png) |
-| **Approval queue** | **Instant quote** |
-| ![Approval queue](docs/assets/approval-queue.png) | ![Quote](docs/assets/quote.png) |
+| **Approval queue with agent proposals** | **Fraud rings from Neo4j** |
+| ![Approval queue](docs/assets/approval-queue.png) | ![Fraud rings](docs/assets/fraud-rings.png) |
 
 ## Features
 
@@ -32,19 +34,12 @@ with one click and send suspicious ones to investigation. Their decisions feed t
 | Instant quote | Public premium calculator with itemized discounts and "save $X by…" suggestions |
 | Lead pipeline | Quote requests auto-routed to the least-loaded agent, kanban with win rate and pipeline premium |
 | Portfolio segments | k-means groups policies into Steady, Watch and Elevated with a retention or loss-control play for each |
-| Model insights | Holdout and cross-validated metrics, confusion matrix, learned weights, retrain on demand |
-
-### Growth ideas built in
-
-The quote flow borrows what comparison sites do well (instant price, no account, visible discounts) and points it at
-farm equipment, where buyers usually wait on a phone call. Three features target revenue and loss ratio directly:
-
-1. **Straight-through processing.** Small, clean claims skip the inspection step. Faster payouts are the strongest
-   driver of renewal in commercial lines, and the adjuster hours go to the claims that need them.
-2. **Downtime-aware priority.** A broken combine in October costs a farm far more than the repair. Claims flagged as
-   harvest critical, or filed in planting and harvest windows, move up the queue.
-3. **Risk-based upsell.** Segments and quote suggestions turn model output into agent actions: GPS trackers for
-   theft-exposed fleets, safety courses, bundles and higher deductibles.
+| Model insights | Holdout and cross-validated metrics, confusion matrix, learned weights, graph lift, retrain on demand |
+| Claims agent | Spring AI tool calling over six tools, cited answers, a proposal the adjuster approves, full tool trace |
+| Fraud rings | Neo4j graph of shared phones, payout accounts and repair shops, linked parties within two hops, ring ranking |
+| Policy search | Clause-level retrieval from pgvector, used by the agent so answers cite clause ids |
+| Sign-in | Microsoft Entra ID (MSAL, Authorization Code with PKCE), app roles Agent, Adjuster and Manager |
+| Manager report | Read-only reporting views for Power BI: loss ratio, funnel, cycle time, fraud by segment, agent overrides |
 
 ## Architecture
 
@@ -52,27 +47,38 @@ farm equipment, where buyers usually wait on a phone call. Three features target
 %%{init: {'theme':'base','themeVariables':{'primaryColor':'#E6EEFA','primaryBorderColor':'#0047BB','primaryTextColor':'#0B1F4B','lineColor':'#0047BB','fontFamily':'Source Sans 3, Arial','clusterBkg':'#F3F7FD','clusterBorder':'#C7DBF7'}}}%%
 flowchart LR
   subgraph Client["Browser"]
-    UI["Angular 18 SPA<br/>signals · standalone components · animations"]
+    UI["Angular 18 SPA<br/>MSAL sign-in · signals · animations"]
   end
+  ENTRA["Microsoft Entra ID<br/>app roles · scopes"]
   subgraph Azure["Azure App Service (Linux container)"]
     direction TB
-    SEC["Spring Security<br/>JWT filter · rate limiter · CSP"]
-    API["Spring MVC controllers<br/>validation · ProblemDetail errors"]
-    SVC["Claim, policy, quote, document services"]
+    SEC["OAuth2 resource server<br/>Entra tokens · roles · CSP"]
+    SVC["Claims, policies, quotes, documents"]
     ML["Scoring engine<br/>logistic · ridge · naive Bayes · k-means · k-NN"]
-    JPA["Spring Data JPA"]
-    SEC --> API --> SVC --> JPA
+    AG["Claims agent<br/>Spring AI tools · proposals"]
+    OUT["Outbox sync"]
+    SEC --> SVC
     SVC <--> ML
+    AG --> SVC
   end
-  DB[("PostgreSQL 16<br/>Flyway migrations")]
-  ACR[["Azure Container Registry"]]
+  LLM["Claude or Azure OpenAI"]
+  DB[("PostgreSQL 16<br/>Flyway · pgvector · report views")]
+  NEO[("Neo4j<br/>fraud graph")]
+  PBI["Power BI"]
   GH["GitHub Actions<br/>JUnit 5 · Testcontainers · Dependency-Check · CodeQL"]
-  UI -- "HTTPS + Bearer token" --> SEC
-  JPA --> DB
-  GH -- "OIDC login, push image" --> ACR -- "managed identity pull" --> Azure
+  UI -- "PKCE sign-in" --> ENTRA
+  UI -- "HTTPS + Entra token" --> SEC
+  AG --> LLM
+  SVC --> DB
+  OUT --> NEO
+  DB --> OUT
+  PBI -- "read-only role" --> DB
+  GH -- "OIDC login, image via ACR" --> Azure
 ```
 
-One image serves both the API and the compiled Angular app, so there is no CORS in production and one thing to deploy.
+One image serves both the API and the compiled Angular app. The agent is the only part that calls a model, and every
+tool it uses runs as the signed-in adjuster. Details: [claims agent, fraud graph and policy search](docs/agent-and-graph.md),
+[product and design notes](docs/product-notes.md).
 
 ## Use cases
 
@@ -81,6 +87,7 @@ One image serves both the API and the compiled Angular app, so there is no CORS 
 flowchart LR
   Agent(["Agent"])
   Adjuster(["Adjuster"])
+  Manager(["Claims manager"])
   Prospect(["Farmer or prospect"])
   System(["Nightly scheduler"])
   subgraph App["Notsureance"]
@@ -95,10 +102,14 @@ flowchart LR
     UC9(["Retrain models"])
     UC10(["Get instant quote"])
     UC11(["Request agent callback"])
+    UC12(["Ask the agent, approve its proposal"])
+    UC13(["Review fraud rings"])
+    UC14(["Read the Power BI report"])
     S(["Score and route claim"])
   end
   Agent --- UC1 & UC2 & UC3 & UC4 & UC5
-  Adjuster --- UC3 & UC6 & UC7 & UC8 & UC9
+  Adjuster --- UC3 & UC6 & UC7 & UC8 & UC9 & UC12 & UC13
+  Manager --- UC3 & UC8 & UC13 & UC14
   Prospect --- UC10 & UC11
   System --- UC9
   UC1 -. includes .-> S
@@ -137,7 +148,7 @@ sequenceDiagram
   participant M as ClaimScoringService
   participant DB as PostgreSQL
   Agent->>UI: complete wizard
-  UI->>API: POST /api/claims (JWT)
+  UI->>API: POST /api/claims (Entra token)
   API->>S: validated request
   S->>DB: check policy owner, period, equipment
   S->>M: claim signals
@@ -165,8 +176,10 @@ operate. Each piece maps to a topic on the [roadmap.sh machine learning path](ht
 | Train/test split, k-fold CV, precision, recall, F1, ROC AUC, R² | `ModelTrainingService`, `ClassificationMetrics`, `RegressionMetrics` |
 | Explainability | Per-claim contributions (weight × standardized value) shown as "why the model scored it this way" |
 | Online feedback | Adjuster decisions (approved amounts, confirmed fraud) are added to training data on each retrain |
+| Graph features | Confirmed fraud within two hops in Neo4j, measured against the same model without it |
 
-Current holdout numbers: fraud ROC AUC ≈ 0.94–0.97, recall ≈ 0.70 at the 0.4 investigation threshold, payout R² ≈ 0.85.
+Default training run: fraud ROC AUC 0.974 (0.951 without the graph feature), recall about 0.70 at the 0.4
+investigation threshold, payout R² about 0.85.
 
 > **Read these numbers with suspicion.** There is no public farm claims dataset, so training data comes from
 > `SyntheticClaimFactory`, a generator with known class-conditional patterns. The models are recovering structure I
@@ -175,11 +188,12 @@ Current holdout numbers: fraud ROC AUC ≈ 0.94–0.97, recall ≈ 0.70 at the 0
 
 ## Security
 
-- Stateless JWT (HS256, issuer and audience checked, 60 minute expiry); the user is reloaded per request so a
-  deactivated account loses access immediately. Secrets under 32 bytes stop the app at startup.
-- Role checks on routes and with `@PreAuthorize`. Agents only see their own policies and claims; other records return
-  404, not 403, so ids cannot be probed.
-- BCrypt cost 12, per-IP rate limits on login, quotes and lead capture, uniform login error message.
+- Microsoft Entra ID tokens checked for signature, issuer, audience and expiry; app roles map to Spring authorities,
+  `claims.read` gates reads and `claims.write` gates changes. Tokens live in MSAL's memory cache, not in storage.
+- Entra says who you are, the database decides what you see: agents only see their own policies and claims, and
+  other records return 404, not 403, so ids cannot be probed. Managers read everything but cannot decide.
+- The agent only proposes; tools run as the signed-in adjuster and never return masked identifiers in clear text.
+- Per-IP rate limits on the public quote and lead endpoints.
 - Bean Validation on every request, `ProblemDetail` errors without stack traces, LIKE wildcards escaped, sort fields
   whitelisted, page size capped.
 - Uploads checked by file signature rather than name or header, filenames sanitized, served as attachments with `nosniff`.
@@ -187,25 +201,25 @@ Current holdout numbers: fraud ROC AUC ≈ 0.94–0.97, recall ≈ 0.70 at the 0
 - Demo accounts live in a separate Flyway location that is only loaded when asked for.
 - CI runs OWASP Dependency-Check (fails at CVSS 9), `npm audit`, CodeQL `security-extended` and Dependabot.
 
-Known trade-off: the token sits in `sessionStorage`, readable by any script that gets past the CSP. An HttpOnly cookie
-plus CSRF tokens is stronger and is the next step if this leaves demo territory.
+Integration tests mint their own RS256 tokens and run them through the same validators, so CI never calls Entra.
 
 ## Run it
 
-```bash
-cp .env.example .env && docker compose up --build
-```
-
-Open http://localhost:8080. Every demo account uses the password `Harvest#2026`:
-`agent@notsureance.dev`, `agent2@notsureance.dev`, `adjuster@notsureance.dev`, `adjuster2@notsureance.dev`.
-
-For development, run Postgres from compose, then the API and the Angular dev server (proxies `/api` to 8080):
+Register the two Entra apps once (any tenant, the free tier works) and paste the printed values into `.env`:
 
 ```bash
-(cd backend && SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run) & (cd frontend && npm ci && npm start)
+cp .env.example .env && infra/entra/register-apps.sh http://localhost:8080
 ```
 
-Swagger UI is at `/swagger-ui.html` under the dev profile.
+```bash
+docker compose up --build
+```
+
+Open http://localhost:8080 and sign in as one of the Entra test users `agent@`, `adjuster@` or `manager@` your
+tenant domain. Set `AGENT_MODEL=claude` and `ANTHROPIC_API_KEY`, or the Azure OpenAI variables, to turn on the agent.
+
+For development, start `db` and `graph` from compose, then `mvn spring-boot:run` in `backend` with the `dev` profile
+(Swagger UI at `/swagger-ui.html`) and `npm start` in `frontend`, which proxies `/api` to 8080.
 
 ## Tests
 
@@ -213,33 +227,24 @@ Swagger UI is at `/swagger-ui.html` under the dev profile.
 (cd backend && mvn verify) && (cd frontend && npm run test:ci)
 ```
 
-The backend runs 26 unit tests and 11 integration tests against a real PostgreSQL 16 in Testcontainers (auth,
-throttling, the full claim lifecycle, ownership rules, uploads, quotes). Docker must be running.
+34 unit and 29 integration tests run against real PostgreSQL 16 with pgvector and Neo4j 5 in Testcontainers (Entra
+token checks, ownership, graph, retrieval, the agent with scripted model turns, report role), plus 10 Karma specs.
 
 ## Deploy to Azure
 
-`infra/azure/main.bicep` creates the registry, App Service plan, Linux Web App with a managed identity that pulls from
-ACR, and PostgreSQL Flexible Server.
+`infra/azure/main.bicep` creates the registry, App Service plan, a Linux Web App that pulls from ACR with a managed
+identity, and PostgreSQL Flexible Server with pgvector allowed. Point `neo4jUri` at an AuraDB Free instance.
 
 ```bash
-az deployment group create -g <resource-group> -f infra/azure/main.bicep -p databasePassword=<pw> jwtSecret=<secret>
+az deployment group create -g <rg> -f infra/azure/main.bicep -p databasePassword=<pw> entraTenantId=<id> entraApiAudiences=<aud> entraSpaClientId=<id> entraApiScopes=<scopes> neo4jUri=<uri> neo4jPassword=<pw>
 ```
 
-Then set repository secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (federated credential for
-OIDC, no client secret) and variables `AZURE_WEBAPP_NAME`, `AZURE_REGISTRY`. Every green CI run on `main` builds the
-image, pushes it to ACR, deploys and smoke-tests the readiness probe. Add `NVD_API_KEY` to speed up Dependency-Check.
+Set repository secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (OIDC, no client secret) and
+variables `AZURE_WEBAPP_NAME`, `AZURE_REGISTRY`; every green CI run on `main` then deploys and smoke-tests the app.
 
 ## Project layout
 
-`backend/` holds the API by domain (`claim`, `policy`, `quote`, `document`, `analytics`, `security`, `ml/core`,
-`ml/scoring`, `ml/insight`). `frontend/` splits into `core`, `shared` and one folder per screen under `features`.
-`infra/azure` has the Bicep and `.github` the pipelines. No source file is longer than 250 lines. The one exception in the repository is `frontend/package-lock.json`, which is
-generated and kept on purpose: deleting it would make installs non-reproducible and weaken the supply-chain checks.
-
-## Design
-
-Colours follow the Nationwide palette (Nationwide blue `#0047BB`, deep navy, sky accent) so the app feels at home next
-to the existing agribusiness tools. The logo is an original mark, a shield with field rows, rather than the Nationwide
-eagle, which is a registered trademark. Nationwide's typeface is proprietary, so the UI uses Source Sans 3, a humanist
-sans with similar proportions. Motion is purposeful and short: route transitions, staggered lists, animated gauges and
-counters, and all of it switches off under `prefers-reduced-motion`.
+`backend/` holds the API by domain (`claim`, `policy`, `agent`, `graph`, `rag`, `ml`, `security` and more).
+`frontend/` splits into `core`, `shared` and one folder per screen. `infra/` has the Bicep and Entra script,
+`docs/powerbi` the [report setup](docs/powerbi/README.md). No source file is longer than 250 lines; the one exception,
+`frontend/package-lock.json`, is generated and kept so installs stay reproducible and auditable.
