@@ -12,6 +12,7 @@ import { LabelPipe } from '../../shared/pipes/label.pipe';
 import { ClaimInsightComponent } from './detail/claim-insight.component';
 import { ClaimTimelineComponent } from './detail/claim-timeline.component';
 import { DecisionPanelComponent } from './detail/decision-panel.component';
+import { AgentPanelComponent } from './detail/agent-panel.component';
 import { DocumentPanelComponent } from './detail/document-panel.component';
 import { LinkedPartiesComponent } from './detail/linked-parties.component';
 
@@ -20,7 +21,7 @@ import { LinkedPartiesComponent } from './detail/linked-parties.component';
   standalone: true,
   imports: [RouterLink, CurrencyPipe, DatePipe, LabelPipe, StatusBadgeComponent, EmptyStateComponent,
     ClaimInsightComponent, ClaimTimelineComponent, DecisionPanelComponent, DocumentPanelComponent,
-    LinkedPartiesComponent],
+    LinkedPartiesComponent, AgentPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-detail.component.html',
   styleUrl: './claim-detail.component.scss',

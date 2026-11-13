@@ -3,6 +3,22 @@
   <h1>Approval queue</h1>
   <p class="muted">Open claims sorted by priority. Priority weighs loss size, harvest downtime, season and fraud risk.</p>
 
+  @if (proposals().length) {
+    <section class="proposals" [@listStagger]="proposals().length">
+      <h3>Agent proposals waiting for you <span class="count">{{ proposals().length }}</span></h3>
+      @for (proposal of proposals(); track proposal.id) {
+        <div class="proposal lift">
+          <a [routerLink]="['/claims', proposal.claimId]"><strong>{{ proposal.claimNumber }}</strong></a>
+          <span class="muted">{{ proposal.farmName }}</span>
+          <span class="chip">{{ proposal.action | label }}</span>
+          <span class="reason">{{ proposal.reason }}</span>
+          <button type="button" class="btn btn-success" (click)="decideProposal(proposal, true)">Approve</button>
+          <button type="button" class="btn btn-outline" (click)="decideProposal(proposal, false)">Reject</button>
+        </div>
+      }
+    </section>
+  }
+
   <div class="board">
     @for (column of lanes; track column.lane) {
       <section class="column" [class]="'column ' + column.lane">

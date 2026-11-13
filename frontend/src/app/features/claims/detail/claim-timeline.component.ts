@@ -11,6 +11,7 @@ const TITLES: Record<TimelineEntry['type'], string> = {
   STATUS_CHANGED: 'Status changed',
   INFO_PROVIDED: 'Information provided',
   DOCUMENT_ADDED: 'Document added',
+  AGENT_RECOMMENDED: 'Agent recommendation',
 };
 
 @Component({
@@ -46,6 +47,7 @@ const TITLES: Record<TimelineEntry['type'], string> = {
     .SCORED .dot { background: var(--sky-strong); }
     .DOCUMENT_ADDED .dot { background: var(--muted); }
     .INFO_PROVIDED .dot { background: #e09b00; }
+    .AGENT_RECOMMENDED .dot { background: var(--sky-strong); box-shadow: 0 0 0 4px var(--info-bg); }
     li:last-child .dot { animation: pulse-ring 2s infinite; }
     p { margin: 0.2rem 0; }
   `,

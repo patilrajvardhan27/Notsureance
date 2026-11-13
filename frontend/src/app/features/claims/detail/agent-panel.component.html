@@ -1,0 +1,77 @@
+<article class="card agent">
+  <div class="row">
+    <h3>Claims agent</h3>
+    <span class="spacer"></span>
+    <app-synthetic-note />
+  </div>
+  <p class="muted">Reads the claim, scores, similar claims, linked parties and policy wording, then proposes one action.
+    It never changes a claim; you approve or reject.</p>
+
+  @if (auth.hasRole('ADJUSTER')) {
+    <div class="ask">
+      <input class="input" [(ngModel)]="question" maxlength="500" placeholder="Optional: ask something specific"
+             aria-label="Question for the agent" (keydown.enter)="ask()" />
+      <button class="btn btn-primary" type="button" (click)="ask()" [disabled]="busy()">
+        <span class="dots" [class.on]="busy()"><i></i><i></i><i></i></span>
+        {{ busy() ? 'Working…' : 'Get a recommendation' }}
+      </button>
+    </div>
+  }
+  @if (error()) {
+    <p class="banner danger" role="alert" @expand>{{ error() }}</p>
+  }
+
+  @if (latest(); as run) {
+    <section class="run" @popIn>
+      <div class="row meta">
+        <span class="chip" [class.warn]="run.status !== 'COMPLETED'">{{ run.status | label }}</span>
+        @if (run.status === 'COMPLETED') {
+          <span class="chip" [class.ok]="run.supported" [class.warn]="!run.supported">
+            {{ run.supported ? 'Cited' : 'Unsupported' }}
+          </span>
+        }
+        <span class="muted small">{{ run.toolCalls }} tool call(s) · {{ run.model }} · {{ run.startedAt | date: 'MMM d, h:mm a' }}</span>
+      </div>
+      @if (run.answer) {
+        <p class="answer"><app-cited-text [text]="run.answer" [valid]="run.citations" /></p>
+      }
+      @if (!run.supported && run.status === 'COMPLETED') {
+        <p class="banner warn-banner">This answer cites nothing a tool returned. Treat it as unsupported.</p>
+      }
+
+      @if (run.proposal; as proposal) {
+        <div class="proposal" [class]="'proposal ' + proposal.status">
+          <div class="row">
+            <strong>Proposed: {{ proposal.action | label }}</strong>
+            <span class="spacer"></span>
+            <span class="chip">{{ proposal.status | label }}</span>
+          </div>
+          <p><app-cited-text [text]="proposal.reason" [valid]="run.citations" /></p>
+          @if (proposal.status === 'PENDING' && auth.hasRole('ADJUSTER')) {
+            <input class="input" [(ngModel)]="note" maxlength="1000" placeholder="Note for the record (optional)"
+                   aria-label="Decision note" />
+            <div class="row actions">
+              <button class="btn btn-success" type="button" (click)="approve(run)">Approve and apply</button>
+              <button class="btn btn-outline" type="button" (click)="reject(run)">Reject</button>
+            </div>
+          }
+        </div>
+      }
+
+      <button class="btn btn-ghost" type="button" (click)="showTrace.set(!showTrace())">
+        {{ showTrace() ? 'Hide' : 'Show' }} tool trace ({{ run.trace.length }})
+      </button>
+      @if (showTrace()) {
+        <ol class="trace" @expand>
+          @for (step of run.trace; track step.step) {
+            <li [class.failed]="step.failed">
+              <div class="row"><code>{{ step.tool }}</code><span class="muted small">{{ step.durationMs }} ms</span></div>
+              <pre>{{ step.input }}</pre>
+              <details><summary>Output</summary><pre>{{ step.output }}</pre></details>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</article>

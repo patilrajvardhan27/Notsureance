@@ -1,7 +1,10 @@
 import { CurrencyPipe, DatePipe, PercentPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
+import { AgentApi } from '../../core/api/agent.api';
 import { ClaimsApi } from '../../core/api/claims.api';
+import { AgentProposal } from '../../core/models/agent.models';
 import { ClaimSummary, TriageLane } from '../../core/models/claim.models';
 import { problemMessage } from '../../core/ui/problem';
 import { ToastService } from '../../core/ui/toast.service';
@@ -30,6 +33,8 @@ export class ApprovalQueueComponent {
   readonly lanes = LANES;
   readonly claims = signal<ClaimSummary[] | null>(null);
   readonly approving = signal<number | null>(null);
+  readonly proposals = signal<AgentProposal[]>([]);
+  private readonly agent = inject(AgentApi);
   readonly byLane = computed(() => {
     const grouped: Record<TriageLane, ClaimSummary[]> = { FAST_TRACK: [], STANDARD: [], SPECIAL_INVESTIGATION: [] };
     (this.claims() ?? []).forEach((claim) => grouped[claim.lane ?? 'STANDARD'].push(claim));
@@ -62,7 +67,20 @@ export class ApprovalQueueComponent {
       });
   }
 
+  decideProposal(proposal: AgentProposal, approve: boolean): void {
+    const call: Observable<unknown> = approve ? this.agent.approve(proposal.id, '') : this.agent.reject(proposal.id, '');
+    call.subscribe({
+      next: () => {
+        this.proposals.update((list) => list.filter((item) => item.id !== proposal.id));
+        this.toasts.show(approve ? `${proposal.claimNumber}: proposal applied` : `${proposal.claimNumber}: proposal rejected`);
+        this.load();
+      },
+      error: (err: unknown) => this.toasts.show(problemMessage(err, 'Could not apply the proposal'), 'error'),
+    });
+  }
+
   private load(): void {
     this.api.queue().subscribe((page) => this.claims.set(page.items));
+    this.agent.pending().subscribe((list) => this.proposals.set(list));
   }
 }

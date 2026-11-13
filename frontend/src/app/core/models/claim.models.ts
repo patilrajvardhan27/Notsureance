@@ -55,7 +55,7 @@ export interface ClaimAssessment {
 }
 
 export interface TimelineEntry {
-  type: 'FILED' | 'SCORED' | 'ASSIGNED' | 'STATUS_CHANGED' | 'INFO_PROVIDED' | 'DOCUMENT_ADDED';
+  type: 'FILED' | 'SCORED' | 'ASSIGNED' | 'STATUS_CHANGED' | 'INFO_PROVIDED' | 'DOCUMENT_ADDED' | 'AGENT_RECOMMENDED';
   fromStatus: ClaimStatus | null;
   toStatus: ClaimStatus | null;
   note: string | null;
