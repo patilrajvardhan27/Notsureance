@@ -7,4 +7,8 @@ public record AuthenticatedUser(Long id, String email, String fullName, Role rol
     public boolean isAdjuster() {
         return role == Role.ADJUSTER;
     }
+
+    public boolean seesAllClaims() {
+        return role == Role.ADJUSTER || role == Role.MANAGER;
+    }
 }

@@ -1,76 +1,68 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
-import { Role, TokenResponse, UserProfile } from '../models/auth.models';
-
-const STORAGE_KEY = 'nsr.session';
-
-interface Session {
-  token: string;
-  expiresAt: string;
-  user: UserProfile;
-}
+import { toObservable } from '@angular/core/rxjs-interop';
+import { MsalBroadcastService, MsalService } from '@azure/msal-angular';
+import { InteractionStatus } from '@azure/msal-browser';
+import { Observable, filter, map, take } from 'rxjs';
+import { Role, UserProfile } from '../models/auth.models';
+import { SIGN_IN_CONFIG } from './sign-in.config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
-  private readonly session = signal<Session | null>(this.restore());
-  private expiryTimer?: ReturnType<typeof setTimeout>;
+  private readonly msal = inject(MsalService);
+  private readonly config = inject(SIGN_IN_CONFIG);
+  private readonly profile = signal<UserProfile | null>(null);
+  private readonly settled = signal(false);
+  readonly signInError = signal('');
 
-  readonly user = computed(() => this.session()?.user ?? null);
-  readonly isSignedIn = computed(() => this.session() !== null);
-  readonly role = computed<Role | null>(() => this.session()?.user.role ?? null);
+  readonly user = this.profile.asReadonly();
+  readonly isSignedIn = computed(() => this.profile() !== null);
+  readonly role = computed<Role | null>(() => this.profile()?.role ?? null);
 
   constructor() {
-    this.scheduleExpiry();
+    this.msal.handleRedirectObservable().subscribe();
+    inject(MsalBroadcastService)
+      .inProgress$.pipe(filter((status) => status === InteractionStatus.None))
+      .subscribe(() => this.refreshAccount());
   }
 
-  token(): string | null {
-    return this.session()?.token ?? null;
+  hasRole(...roles: Role[]): boolean {
+    const role = this.role();
+    return role !== null && roles.includes(role);
   }
 
-  hasRole(role: Role): boolean {
-    return this.role() === role;
+  whenSettled(): Observable<UserProfile | null> {
+    return toObservable(this.settled).pipe(filter(Boolean), take(1), map(() => this.profile()));
   }
 
-  login(email: string, password: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>('/api/auth/login', { email, password }).pipe(
-      tap((response) => {
-        const session = { token: response.accessToken, expiresAt: response.expiresAt, user: response.user };
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-        this.session.set(session);
-        this.scheduleExpiry();
-      }),
-    );
+  login(returnTo = '/dashboard'): void {
+    this.msal.loginRedirect({ scopes: this.config.apiScopes, redirectStartPage: window.location.origin + returnTo });
   }
 
-  logout(redirect = true): void {
-    sessionStorage.removeItem(STORAGE_KEY);
-    this.session.set(null);
-    clearTimeout(this.expiryTimer);
-    if (redirect) {
-      this.router.navigate(['/login']);
+  logout(): void {
+    const account = this.msal.instance.getActiveAccount();
+    this.profile.set(null);
+    this.msal.logoutRedirect({ account });
+  }
+
+  private refreshAccount(): void {
+    const instance = this.msal.instance;
+    const account = instance.getActiveAccount() ?? instance.getAllAccounts()[0] ?? null;
+    if (!account) {
+      this.settled.set(true);
+      return;
     }
-  }
-
-  private restore(): Session | null {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      const session = raw ? (JSON.parse(raw) as Session) : null;
-      return session && new Date(session.expiresAt).getTime() > Date.now() ? session : null;
-    } catch {
-      return null;
-    }
-  }
-
-  private scheduleExpiry(): void {
-    clearTimeout(this.expiryTimer);
-    const current = this.session();
-    if (current) {
-      const remaining = new Date(current.expiresAt).getTime() - Date.now();
-      this.expiryTimer = setTimeout(() => this.logout(), Math.max(remaining, 0));
-    }
+    instance.setActiveAccount(account);
+    this.http.get<UserProfile>('/api/auth/me').subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
+        this.settled.set(true);
+      },
+      error: () => {
+        this.signInError.set('Your Microsoft account is signed in but has no Notsureance role yet. Ask an admin to assign one.');
+        this.settled.set(true);
+      },
+    });
   }
 }

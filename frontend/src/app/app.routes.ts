@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { roleGuard, signedInGuard } from './core/auth/auth.guards';
+import { MsalGuard } from '@azure/msal-angular';
+import { roleGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -15,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    canActivate: [signedInGuard],
+    canActivate: [MsalGuard],
     children: [
       {
         path: 'dashboard',
@@ -53,7 +54,7 @@ export const routes: Routes = [
       {
         path: 'insights',
         data: { page: 'insights' },
-        canActivate: [roleGuard('ADJUSTER')],
+        canActivate: [roleGuard('ADJUSTER', 'MANAGER')],
         loadComponent: () => import('./features/insights/model-insights.component').then((m) => m.ModelInsightsComponent),
       },
     ],

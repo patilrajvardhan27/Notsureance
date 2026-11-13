@@ -14,8 +14,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,11 +33,6 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ProblemDetail handleBusinessRule(BusinessRuleException ex) {
         return problem(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-    }
-
-    @ExceptionHandler({BadCredentialsException.class, DisabledException.class})
-    ProblemDetail handleBadLogin() {
-        return problem(HttpStatus.UNAUTHORIZED, "Email or password is incorrect");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

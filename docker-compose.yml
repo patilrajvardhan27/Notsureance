@@ -25,8 +25,12 @@ services:
       DATABASE_URL: jdbc:postgresql://db:5432/notsureance
       DATABASE_USER: notsureance
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:?Run infra/entra/register-apps.sh and copy its output into .env}
+      ENTRA_API_AUDIENCES: ${ENTRA_API_AUDIENCES:?Set ENTRA_API_AUDIENCES in .env}
+      ENTRA_SPA_CLIENT_ID: ${ENTRA_SPA_CLIENT_ID:?Set ENTRA_SPA_CLIENT_ID in .env}
+      ENTRA_API_SCOPES: ${ENTRA_API_SCOPES:?Set ENTRA_API_SCOPES in .env}
+      DEMO_EMAIL_DOMAIN: ${DEMO_EMAIL_DOMAIN:-notsureance.dev}
     ports:
       - "8080:8080"
     restart: unless-stopped

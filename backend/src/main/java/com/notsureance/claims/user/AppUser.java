@@ -14,8 +14,8 @@ public class AppUser extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "entra_object_id", unique = true)
+    private String entraObjectId;
 
     @Column(name = "full_name", nullable = false)
     private String fullName;
@@ -30,19 +30,25 @@ public class AppUser extends BaseEntity {
     protected AppUser() {
     }
 
-    public AppUser(String email, String passwordHash, String fullName, Role role) {
+    public AppUser(String entraObjectId, String email, String fullName, Role role) {
+        this.entraObjectId = entraObjectId;
         this.email = email;
-        this.passwordHash = passwordHash;
         this.fullName = fullName;
         this.role = role;
+    }
+
+    void syncFromDirectory(String objectId, String name, Role directoryRole) {
+        this.entraObjectId = objectId;
+        this.fullName = name;
+        this.role = directoryRole;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getEntraObjectId() {
+        return entraObjectId;
     }
 
     public String getFullName() {

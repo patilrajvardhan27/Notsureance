@@ -15,12 +15,12 @@ interface NavLink {
 }
 
 const LINKS: NavLink[] = [
-  { path: '/dashboard', label: 'Dashboard', roles: ['AGENT', 'ADJUSTER'] },
+  { path: '/dashboard', label: 'Dashboard', roles: ['AGENT', 'ADJUSTER', 'MANAGER'] },
   { path: '/claims/new', label: 'File a claim', roles: ['AGENT'] },
-  { path: '/claims', label: 'Track claims', roles: ['AGENT', 'ADJUSTER'] },
+  { path: '/claims', label: 'Track claims', roles: ['AGENT', 'ADJUSTER', 'MANAGER'] },
   { path: '/queue', label: 'Approval queue', roles: ['ADJUSTER'] },
   { path: '/leads', label: 'Leads', roles: ['AGENT'] },
-  { path: '/insights', label: 'Model insights', roles: ['ADJUSTER'] },
+  { path: '/insights', label: 'Model insights', roles: ['ADJUSTER', 'MANAGER'] },
 ];
 
 @Component({

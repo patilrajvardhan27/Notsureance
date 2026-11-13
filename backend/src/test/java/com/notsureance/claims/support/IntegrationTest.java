@@ -1,8 +1,5 @@
 package com.notsureance.claims.support;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
@@ -10,20 +7,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-@SpringBootTest(properties = {"app.ml.synthetic-samples=1200", "app.security.requests-per-minute=5"})
+@SpringBootTest(properties = {"app.ml.synthetic-samples=1200", "app.security.requests-per-minute=5",
+        "app.security.entra.tenant-id=" + TestTokens.TENANT, "app.security.entra.audiences=" + TestTokens.AUDIENCE,
+        "app.security.entra.spa-client-id=test-spa", "app.security.entra.api-scopes=api://notsureance-test/claims.read"})
+@Import(TestJwtConfig.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public abstract class IntegrationTest {
 
-    protected static final String PASSWORD = "Harvest#2026";
     protected static final String AGENT = "agent@notsureance.dev";
     protected static final String OTHER_AGENT = "agent2@notsureance.dev";
     protected static final String ADJUSTER = "adjuster@notsureance.dev";
+    protected static final String MANAGER = "manager@notsureance.dev";
 
     @ServiceConnection
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -38,16 +38,16 @@ public abstract class IntegrationTest {
     @Autowired
     protected ObjectMapper json;
 
-    protected String tokenFor(String email) throws Exception {
-        String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content(toJson(Map.of("email", email, "password", PASSWORD)))
-                        .with(request -> {
-                            request.setRemoteAddr("10.0.0." + Math.abs(email.hashCode() % 200));
-                            return request;
-                        }))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        return "Bearer " + json.readTree(body).get("accessToken").asText();
+    private static final Map<String, String> DEMO_NAMES = Map.of(AGENT, "Dana Whitfield", OTHER_AGENT, "Marcus Ortega",
+            ADJUSTER, "Priya Raman", MANAGER, "Grace Okafor");
+
+    protected String tokenFor(String email) {
+        String role = email.startsWith("adjuster") ? "Adjuster" : email.startsWith("manager") ? "Manager" : "Agent";
+        return bearer(TestTokens.Spec.of(email, role).name(DEMO_NAMES.getOrDefault(email, email)));
+    }
+
+    protected String bearer(TestTokens.Spec spec) {
+        return "Bearer " + TestTokens.mint(spec);
     }
 
     protected String toJson(Object value) throws Exception {

@@ -98,14 +98,20 @@
   border: 1px dashed var(--brand-200);
   border-radius: var(--radius-sm);
   background: var(--brand-50);
-  font: inherit;
-  cursor: pointer;
   text-align: left;
 
   span {
     color: var(--muted);
     font-size: 0.88rem;
   }
+}
+
+.ms {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 2px;
+  padding: 1px;
 }
 
 .small {

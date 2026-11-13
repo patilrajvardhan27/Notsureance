@@ -17,6 +17,9 @@ spring:
           time_zone: UTC
   flyway:
     locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+    out-of-order: true
+    placeholders:
+      demoEmailDomain: ${DEMO_EMAIL_DOMAIN:notsureance.dev}
   servlet:
     multipart:
       max-file-size: 5MB
@@ -52,11 +55,13 @@ springdoc:
 
 app:
   security:
-    jwt-secret: ${JWT_SECRET:}
-    issuer: notsureance
-    token-ttl: ${TOKEN_TTL:60m}
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
     requests-per-minute: ${RATE_LIMIT_PER_MINUTE:10}
+    entra:
+      tenant-id: ${ENTRA_TENANT_ID:}
+      audiences: ${ENTRA_API_AUDIENCES:}
+      spa-client-id: ${ENTRA_SPA_CLIENT_ID:}
+      api-scopes: ${ENTRA_API_SCOPES:}
   triage:
     fast-track-max-loss: 25000
     fast-track-max-fraud: 0.2

@@ -19,12 +19,12 @@ public class PolicyService {
     }
 
     public List<Policy> visibleTo(AuthenticatedUser user) {
-        return user.isAdjuster() ? policies.findAllByOrderByFarmName() : policies.findByAgentIdOrderByFarmName(user.id());
+        return user.seesAllClaims() ? policies.findAllByOrderByFarmName() : policies.findByAgentIdOrderByFarmName(user.id());
     }
 
     public Policy accessiblePolicy(Long policyId, AuthenticatedUser user) {
         Policy policy = policies.findById(policyId).orElseThrow(() -> new NotFoundException("Policy", policyId));
-        if (!user.isAdjuster() && !policy.getAgent().getId().equals(user.id())) {
+        if (!user.seesAllClaims() && !policy.getAgent().getId().equals(user.id())) {
             throw new NotFoundException("Policy", policyId);
         }
         return policy;

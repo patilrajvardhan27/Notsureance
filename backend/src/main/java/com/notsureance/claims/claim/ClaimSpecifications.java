@@ -10,7 +10,7 @@ final class ClaimSpecifications {
     }
 
     static Specification<Claim> visibleTo(AuthenticatedUser user) {
-        return (root, query, cb) -> user.isAdjuster() ? cb.conjunction() : cb.equal(root.get("filedBy").get("id"), user.id());
+        return (root, query, cb) -> user.seesAllClaims() ? cb.conjunction() : cb.equal(root.get("filedBy").get("id"), user.id());
     }
 
     static Specification<Claim> hasStatus(ClaimStatus status) {

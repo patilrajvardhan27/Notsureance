@@ -17,10 +17,20 @@ param databaseAdmin string = 'claimsadmin'
 @description('PostgreSQL administrator password')
 param databasePassword string
 
-@secure()
-@description('JWT signing secret, at least 32 bytes')
-@minLength(32)
-param jwtSecret string
+@description('Entra tenant that signs user tokens')
+param entraTenantId string
+
+@description('Accepted token audiences, comma separated (API app id and api:// URI)')
+param entraApiAudiences string
+
+@description('Client id of the Angular app registration')
+param entraSpaClientId string
+
+@description('API scopes the Angular app asks for, comma separated')
+param entraApiScopes string
+
+@description('Default domain of the tenant, used to map the demo users')
+param demoEmailDomain string = 'notsureance.dev'
 
 @description('Load the demo farms, claims and accounts. Keep false for real environments.')
 param seedDemoData bool = false
@@ -116,7 +126,11 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'DATABASE_URL', value: 'jdbc:postgresql://${database.properties.fullyQualifiedDomainName}:5432/notsureance?sslmode=require' }
         { name: 'DATABASE_USER', value: databaseAdmin }
         { name: 'DATABASE_PASSWORD', value: databasePassword }
-        { name: 'JWT_SECRET', value: jwtSecret }
+        { name: 'ENTRA_TENANT_ID', value: entraTenantId }
+        { name: 'ENTRA_API_AUDIENCES', value: entraApiAudiences }
+        { name: 'ENTRA_SPA_CLIENT_ID', value: entraSpaClientId }
+        { name: 'ENTRA_API_SCOPES', value: entraApiScopes }
+        { name: 'DEMO_EMAIL_DOMAIN', value: demoEmailDomain }
         { name: 'ALLOWED_ORIGINS', value: 'https://${appName}.azurewebsites.net' }
         { name: 'FLYWAY_LOCATIONS', value: flywayLocations }
       ]

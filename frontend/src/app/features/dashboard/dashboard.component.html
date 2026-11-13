@@ -7,8 +7,11 @@
       @if (auth.hasRole('AGENT')) {
         <a class="btn btn-primary" routerLink="/claims/new">File a new claim</a>
         <a class="btn btn-outline light" routerLink="/leads">Work my leads</a>
-      } @else {
+      } @else if (auth.hasRole('ADJUSTER')) {
         <a class="btn btn-primary" routerLink="/queue">Open approval queue</a>
+        <a class="btn btn-outline light" routerLink="/insights">Model insights</a>
+      } @else {
+        <a class="btn btn-primary" routerLink="/claims">Review all claims</a>
         <a class="btn btn-outline light" routerLink="/insights">Model insights</a>
       }
     </div>

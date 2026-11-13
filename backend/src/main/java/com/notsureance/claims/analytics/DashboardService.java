@@ -31,7 +31,7 @@ public class DashboardService {
     }
 
     public DashboardStats statsFor(AuthenticatedUser user) {
-        Long agentFilter = user.isAdjuster() ? null : user.id();
+        Long agentFilter = user.seesAllClaims() ? null : user.id();
         Map<ClaimStatus, Long> byStatus = new EnumMap<>(ClaimStatus.class);
         for (ClaimStatus status : ClaimStatus.values()) {
             byStatus.put(status, 0L);
@@ -51,7 +51,7 @@ public class DashboardService {
         long total = byStatus.values().stream().mapToLong(Long::longValue).sum();
         double fastShare = open == 0 ? 0 : byLane.get(TriageLane.FAST_TRACK) / (double) open;
         BigDecimal approved = claims.sumApproved(EnumSet.of(ClaimStatus.APPROVED, ClaimStatus.PAID), agentFilter);
-        long newLeads = user.isAdjuster() ? leads.countByStatus(LeadStatus.NEW)
+        long newLeads = user.seesAllClaims() ? leads.countByStatus(LeadStatus.NEW)
                 : leads.countByAssignedAgentIdAndStatus(user.id(), LeadStatus.NEW);
         return new DashboardStats(byStatus, byLane, open, total, approved, Math.round(fastShare * 1000) / 1000.0, newLeads);
     }

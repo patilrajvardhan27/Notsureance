@@ -16,6 +16,7 @@ import com.notsureance.claims.policy.PolicyViews.EquipmentView;
 import com.notsureance.claims.policy.PolicyViews.PolicySummary;
 import com.notsureance.claims.security.AuthenticatedUser;
 import com.notsureance.claims.user.AppUser;
+import com.notsureance.claims.user.Role;
 import com.notsureance.claims.user.UserRepository;
 import java.time.Clock;
 import java.util.EnumSet;
@@ -88,7 +89,7 @@ public class ClaimService {
     @Transactional(readOnly = true)
     public Claim visibleClaim(Long claimId, AuthenticatedUser user) {
         Claim claim = claims.findById(claimId).orElseThrow(() -> new NotFoundException("Claim", claimId));
-        if (!user.isAdjuster() && !claim.getFiledBy().getId().equals(user.id())) {
+        if (!user.seesAllClaims() && !claim.getFiledBy().getId().equals(user.id())) {
             throw new NotFoundException("Claim", claimId);
         }
         return claim;
@@ -109,8 +110,8 @@ public class ClaimService {
         if (user.isAdjuster()) {
             return claim.getStatus().nextAllowed();
         }
-        return claim.getStatus() == ClaimStatus.NEEDS_INFO
-                ? EnumSet.of(ClaimStatus.UNDER_REVIEW) : EnumSet.noneOf(ClaimStatus.class);
+        boolean agentOwesInfo = user.role() == Role.AGENT && claim.getStatus() == ClaimStatus.NEEDS_INFO;
+        return agentOwesInfo ? EnumSet.of(ClaimStatus.UNDER_REVIEW) : EnumSet.noneOf(ClaimStatus.class);
     }
 
     static String describe(ClaimAssessment assessment) {

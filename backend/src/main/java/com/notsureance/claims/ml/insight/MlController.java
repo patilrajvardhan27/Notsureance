@@ -33,7 +33,7 @@ public class MlController {
     }
 
     @GetMapping("/report")
-    @PreAuthorize("hasRole('ADJUSTER')")
+    @PreAuthorize("hasAnyRole('ADJUSTER', 'MANAGER')")
     public ModelReport report() {
         return scoring.currentReport();
     }
@@ -50,7 +50,7 @@ public class MlController {
     }
 
     @GetMapping("/claims/{claimId}/similar")
-    @PreAuthorize("hasRole('ADJUSTER')")
+    @PreAuthorize("hasAnyRole('ADJUSTER', 'MANAGER')")
     public Neighborhood similar(@PathVariable Long claimId, @AuthenticationPrincipal AuthenticatedUser user) {
         return similarClaims.nearest(claimId, user);
     }

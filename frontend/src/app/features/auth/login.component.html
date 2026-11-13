@@ -19,38 +19,27 @@
 
   <div class="panel" @fadeSlide>
     <h2>Sign in</h2>
-    <p class="muted">Agents and adjusters use their work email.</p>
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" class="input" type="email" formControlName="email" autocomplete="username" />
-        @if (form.controls.email.touched && form.controls.email.invalid) {
-          <span class="error">Enter a valid email address</span>
-        }
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <span class="error">Password must be at least 8 characters</span>
-        }
-      </div>
-      @if (error()) {
-        <p class="banner danger" role="alert">{{ error() }}</p>
-      }
-      <button class="btn btn-primary wide" type="submit" [disabled]="busy()">
-        {{ busy() ? 'Signing in…' : 'Sign in' }}
-      </button>
-    </form>
+    <p class="muted">Agents, adjusters and managers sign in with their Microsoft work account.</p>
+    @if (auth.signInError()) {
+      <p class="banner danger" role="alert">{{ auth.signInError() }}</p>
+    }
+    <button class="btn btn-primary wide" type="button" (click)="signIn()">
+      <svg class="ms" viewBox="0 0 21 21" aria-hidden="true">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022" /><rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef" /><rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+      </svg>
+      Sign in with Microsoft
+    </button>
 
     <div class="demo">
-      <span class="eyebrow">Demo accounts</span>
-      @for (account of demoAccounts; track account.email) {
-        <button type="button" class="demo-card lift" (click)="useDemo(account.email)">
-          <strong>{{ account.label }}</strong>
-          <span>{{ account.note }}</span>
-        </button>
+      <span class="eyebrow">Demo tenant users</span>
+      @for (user of demoUsers; track user.email) {
+        <div class="demo-card">
+          <strong>{{ user.label }} · {{ user.email }}</strong>
+          <span>{{ user.note }}</span>
+        </div>
       }
+      <span class="muted small">Passwords live in the demo tenant, never in this app. All data is synthetic.</span>
     </div>
     <p class="muted small">Looking for coverage? <a routerLink="/quote">Get an instant quote</a></p>
   </div>

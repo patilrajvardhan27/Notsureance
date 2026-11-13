@@ -8,5 +8,7 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
 
     Optional<AppUser> findByEmailIgnoreCase(String email);
 
+    Optional<AppUser> findByEntraObjectId(String entraObjectId);
+
     List<AppUser> findByRoleAndActiveTrue(Role role);
 }

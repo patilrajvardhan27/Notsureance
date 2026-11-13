@@ -1,26 +1,31 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { roleGuard, signedInGuard } from './auth.guards';
+import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
+import { Observable, firstValueFrom, of } from 'rxjs';
+import { UserProfile } from '../models/auth.models';
+import { roleGuard } from './auth.guards';
 import { AuthService } from './auth.service';
 
-describe('auth guards', () => {
+describe('roleGuard', () => {
   const route = {} as ActivatedRouteSnapshot;
-  const state = { url: '/claims' } as RouterStateSnapshot;
+  const state = { url: '/queue' } as RouterStateSnapshot;
 
-  beforeEach(() => {
-    sessionStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient()] });
+  function runAs(profile: UserProfile | null) {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: AuthService, useValue: { whenSettled: () => of(profile) } }],
+    });
+    const result = TestBed.runInInjectionContext(() => roleGuard('ADJUSTER', 'MANAGER')(route, state));
+    return firstValueFrom(result as Observable<boolean | UrlTree>);
+  }
+
+  it('lets matching roles through', async () => {
+    expect(await runAs({ id: 1, email: 'p@x.dev', fullName: 'P', role: 'MANAGER' })).toBeTrue();
   });
 
-  it('sends signed-out users to login and remembers where they were going', () => {
-    const result = TestBed.runInInjectionContext(() => signedInGuard(route, state)) as UrlTree;
-    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/login?next=%2Fclaims');
+  it('sends other roles back to the dashboard', async () => {
+    expect((await runAs({ id: 2, email: 'a@x.dev', fullName: 'A', role: 'AGENT' })) instanceof UrlTree).toBeTrue();
   });
 
-  it('keeps agents out of adjuster pages', () => {
-    spyOn(TestBed.inject(AuthService), 'hasRole').and.returnValue(false);
-    const result = TestBed.runInInjectionContext(() => roleGuard('ADJUSTER')(route, state));
-    expect(result instanceof UrlTree).toBeTrue();
+  it('treats a missing profile as no access', async () => {
+    expect((await runAs(null)) instanceof UrlTree).toBeTrue();
   });
 });
