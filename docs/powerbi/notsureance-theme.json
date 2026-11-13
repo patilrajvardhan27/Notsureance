@@ -1,0 +1,15 @@
+{
+  "name": "Notsureance",
+  "dataColors": ["#0047BB", "#00A3E0", "#0B1F4B", "#7FD3F7", "#1E7D3A", "#E09B00", "#B3261E", "#5B6478"],
+  "background": "#FFFFFF",
+  "foreground": "#1A1F36",
+  "tableAccent": "#0047BB",
+  "good": "#1E7D3A",
+  "neutral": "#E09B00",
+  "bad": "#B3261E",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#0B1F4B" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#5B6478" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 28, "color": "#0B1F4B" }
+  }
+}

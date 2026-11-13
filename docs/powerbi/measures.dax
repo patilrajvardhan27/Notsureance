@@ -1,0 +1,25 @@
+// Measures for the Notsureance claims report. Tables are the rpt_* views loaded through the report_reader login.
+
+Loss Ratio =
+DIVIDE ( SUM ( rpt_loss_ratio_by_segment[incurred_losses] ), SUM ( rpt_loss_ratio_by_segment[earned_premium] ) )
+
+Claims Filed = SUM ( rpt_claims_daily[claims_filed] )
+
+Fast Track Share =
+DIVIDE ( SUM ( rpt_claims_daily[fast_tracked] ), [Claims Filed] )
+
+Investigation Share =
+DIVIDE ( SUM ( rpt_claims_daily[investigated] ), [Claims Filed] )
+
+Approved Payouts = SUM ( rpt_claims_daily[approved_amount] )
+
+Median Days To Decision =
+AVERAGEX ( rpt_adjuster_cycle_time, rpt_adjuster_cycle_time[median_days_to_decision] )
+
+Fraud Rate = DIVIDE ( SUM ( rpt_fraud_by_segment[flagged_claims] ), SUM ( rpt_fraud_by_segment[claims] ) )
+
+Agent Override Rate =
+DIVIDE (
+    SUM ( rpt_agent_proposals[overridden] ),
+    SUM ( rpt_agent_proposals[approved] ) + SUM ( rpt_agent_proposals[overridden] )
+)

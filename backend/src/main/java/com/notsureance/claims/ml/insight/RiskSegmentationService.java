@@ -7,6 +7,7 @@ import com.notsureance.claims.ml.core.StandardScaler;
 import com.notsureance.claims.policy.Equipment;
 import com.notsureance.claims.policy.EquipmentRepository;
 import com.notsureance.claims.policy.Policy;
+import com.notsureance.claims.policy.PolicyRepository;
 import com.notsureance.claims.policy.PolicyService;
 import com.notsureance.claims.security.AuthenticatedUser;
 import java.time.Year;
@@ -32,12 +33,14 @@ public class RiskSegmentationService {
             "Schedule a loss-control visit before renewal"};
 
     private final PolicyService policyService;
+    private final PolicyRepository policyRepository;
     private final EquipmentRepository equipmentRepository;
     private final ClaimRepository claimRepository;
 
-    public RiskSegmentationService(PolicyService policyService, EquipmentRepository equipmentRepository,
-                                   ClaimRepository claimRepository) {
+    public RiskSegmentationService(PolicyService policyService, PolicyRepository policyRepository,
+                                   EquipmentRepository equipmentRepository, ClaimRepository claimRepository) {
         this.policyService = policyService;
+        this.policyRepository = policyRepository;
         this.equipmentRepository = equipmentRepository;
         this.claimRepository = claimRepository;
     }
@@ -50,7 +53,14 @@ public class RiskSegmentationService {
     }
 
     public List<Segment> segment(AuthenticatedUser user) {
-        List<Policy> policies = policyService.visibleTo(user);
+        return segmentPolicies(policyService.visibleTo(user));
+    }
+
+    public List<Segment> segmentAll() {
+        return segmentPolicies(policyRepository.findAllByOrderByFarmName());
+    }
+
+    private List<Segment> segmentPolicies(List<Policy> policies) {
         if (policies.isEmpty()) {
             return List.of();
         }
