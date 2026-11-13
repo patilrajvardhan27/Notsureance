@@ -78,10 +78,14 @@ jobs:
           key: dependency-check-${{ runner.os }}-${{ github.run_id }}
           restore-keys: dependency-check-${{ runner.os }}-
       - name: Scan dependencies
+        if: ${{ secrets.NVD_API_KEY != '' || github.event_name != 'pull_request' }}
         working-directory: backend
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn -B org.owasp:dependency-check-maven:check
+      - name: Skip scan when NVD API key is unavailable
+        if: ${{ secrets.NVD_API_KEY == '' && github.event_name == 'pull_request' }}
+        run: echo "::warning::Skipping OWASP Dependency-Check for pull requests because NVD_API_KEY is not configured."
       - name: Upload SARIF to code scanning
         if: always() && hashFiles('backend/target/dependency-check-report.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
