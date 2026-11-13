@@ -50,6 +50,7 @@ const TITLES: Record<TimelineEntry['type'], string> = {
     .AGENT_RECOMMENDED .dot { background: var(--sky-strong); box-shadow: 0 0 0 4px var(--info-bg); }
     li:last-child .dot { animation: pulse-ring 2s infinite; }
     p { margin: 0.2rem 0; }
+    small { display: block; }
   `,
 })
 export class ClaimTimelineComponent {

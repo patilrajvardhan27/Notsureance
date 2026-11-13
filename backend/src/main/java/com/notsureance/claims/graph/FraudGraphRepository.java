@@ -27,7 +27,7 @@ public class FraudGraphRepository {
             WITH other, shortest, count(claim) AS claims,
                  count(CASE WHEN claim.flagged THEN 1 END) AS flagged, sum(claim.amount) AS claimed
             RETURN other.key AS claimantKey, other.name AS name, length(shortest) / 2 AS hops,
-                   [n IN nodes(shortest) WHERE NOT n:Claimant | labels(n)[0] + ': ' + n.display] AS via,
+                   [n IN nodes(shortest) WHERE NOT n:Claimant | n.display] AS via,
                    claims, flagged, coalesce(claimed, 0.0) AS claimed
             ORDER BY hops, flagged DESC, claimed DESC
             LIMIT 20
@@ -36,7 +36,7 @@ public class FraudGraphRepository {
     private static final String SHARED_PAIRS = """
             MATCH (a:Claimant)-[:USES|PAID_TO|REPAIRED_AT]->(i)<-[:USES|PAID_TO|REPAIRED_AT]-(b:Claimant)
             WHERE a.key < b.key
-            WITH a, b, collect(DISTINCT labels(i)[0] + ': ' + i.display) AS shared
+            WITH a, b, collect(DISTINCT i.display) AS shared
             WHERE size(shared) >= 2
             RETURN a.key AS left, b.key AS right, shared
             """;

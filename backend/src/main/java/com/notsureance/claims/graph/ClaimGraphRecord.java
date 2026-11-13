@@ -27,7 +27,7 @@ record ClaimGraphRecord(Map<String, Object> parameters) {
         p.put("bankHash", policy.getPayoutAccountHash());
         p.put("bankDisplay", maskTail(policy.getPayoutAccountHash(), "account ref "));
         String dealer = claim.getRepairDealer();
-        p.put("dealer", dealer);
+        p.put("dealer", dealer == null ? null : "repair shop " + dealer);
         p.put("dealerKey", dealer == null ? null : dealer.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", ""));
         return new ClaimGraphRecord(p);
     }

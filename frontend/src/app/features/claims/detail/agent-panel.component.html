@@ -36,7 +36,7 @@
         <p class="answer"><app-cited-text [text]="run.answer" [valid]="run.citations" /></p>
       }
       @if (!run.supported && run.status === 'COMPLETED') {
-        <p class="banner warn-banner">This answer cites nothing a tool returned. Treat it as unsupported.</p>
+        <p class="banner warn-banner">This answer cites nothing, or cites an id no tool returned in this run (struck through). Treat it as unsupported.</p>
       }
 
       @if (run.proposal; as proposal) {
