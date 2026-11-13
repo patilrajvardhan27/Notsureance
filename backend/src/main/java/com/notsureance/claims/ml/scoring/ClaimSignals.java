@@ -20,7 +20,8 @@ public record ClaimSignals(
         int priorClaims,
         LocalDate incidentDate,
         boolean harvestCritical,
-        String description) {
+        String description,
+        int linkedConfirmedFraud) {
 
     public double lossToValue() {
         return estimatedLoss / Math.max(insuredValue, 1.0);

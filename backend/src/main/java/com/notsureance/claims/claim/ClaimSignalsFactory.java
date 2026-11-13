@@ -1,5 +1,6 @@
 package com.notsureance.claims.claim;
 
+import com.notsureance.claims.graph.GraphSignals;
 import com.notsureance.claims.ml.scoring.ClaimSignals;
 import com.notsureance.claims.policy.Equipment;
 import com.notsureance.claims.policy.Policy;
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Component;
 public class ClaimSignalsFactory {
 
     private final ClaimRepository claims;
+    private final GraphSignals graph;
     private final Clock clock;
 
-    public ClaimSignalsFactory(ClaimRepository claims, Clock clock) {
+    public ClaimSignalsFactory(ClaimRepository claims, GraphSignals graph, Clock clock) {
         this.claims = claims;
+        this.graph = graph;
         this.clock = clock;
     }
 
@@ -46,6 +49,7 @@ public class ClaimSignalsFactory {
                 priorClaims,
                 claim.getIncidentDate(),
                 claim.isHarvestCritical(),
-                claim.getDescription());
+                claim.getDescription(),
+                graph.confirmedFraudNear(policy.getPolicyNumber()));
     }
 }

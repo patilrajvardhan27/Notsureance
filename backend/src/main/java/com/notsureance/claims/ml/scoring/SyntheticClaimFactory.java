@@ -50,10 +50,19 @@ public final class SyntheticClaimFactory {
 
         ClaimSignals signals = new ClaimSignals(category, cause, lossToValue * insuredValue, insuredValue,
                 pickDeductible(), insuredValue * 1.1, age, age * (int) between(250, 650), gps, tenure, delay,
-                priorClaims, incident, random.nextDouble() < 0.3, description);
+                priorClaims, incident, random.nextDouble() < 0.3, description, linkedFraud(fraud));
         double payoutRatio = fraud ? 0 : clamp(cause.typicalPayoutRatio() - 0.012 * age
                 - 0.08 * Math.max(0, lossToValue - 0.5) + random.nextGaussian() * 0.05, 0.15, 1.0);
         return new LabeledClaim(signals, textCause, fraud, payoutRatio);
+    }
+
+    // Ring members tend to sit near other confirmed fraud; honest claimants rarely do. This is an assumption baked
+    // into the synthetic data, so any lift it shows says as much about the generator as about the graph.
+    private int linkedFraud(boolean fraud) {
+        if (fraud) {
+            return random.nextDouble() < 0.35 ? 1 + random.nextInt(3) : 0;
+        }
+        return random.nextDouble() < 0.04 ? 1 : 0;
     }
 
     private int priorClaims(boolean fraud) {

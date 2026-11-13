@@ -11,6 +11,7 @@ import com.notsureance.claims.ml.scoring.ModelReport.FeatureWeight;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +50,7 @@ public class ModelTrainingService {
         this.threshold = triage.investigationMinFraud();
     }
 
+    @Order(10)
     @EventListener(ApplicationReadyEvent.class)
     public void trainOnStartup() {
         retrain();
@@ -78,7 +81,8 @@ public class ModelTrainingService {
         StandardScaler fraudScaler = StandardScaler.fit(trainX);
         LogisticRegression fraudModel = LogisticRegression.fit(fraudScaler.transformAll(trainX), trainY,
                 LogisticRegression.Options.defaults());
-        double[][] testX = fraudScaler.transformAll(fraudMatrix(test, causeModel));
+        double[][] rawTestX = fraudMatrix(test, causeModel);
+        double[][] testX = fraudScaler.transformAll(rawTestX);
         double[] testScores = IntStream.range(0, testX.length).mapToDouble(i -> fraudModel.probability(testX[i])).toArray();
         ClassificationMetrics fraudMetrics = ClassificationMetrics.evaluate(testScores, labels(test), threshold);
 
@@ -94,12 +98,31 @@ public class ModelTrainingService {
 
         AnomalyBaseline baseline = AnomalyBaseline.fit(honestTrain.stream().map(LabeledClaim::signals).toList());
         ModelReport report = new ModelReport(clock.instant(), syntheticSamples, feedback.size(), fraudMetrics,
-                crossValidatedAuc(trainX, trainY), payoutMetrics, textAccuracy, featureWeights(fraudModel));
+                crossValidatedAuc(trainX, trainY), holdoutAucWithoutGraph(trainX, trainY, rawTestX, labels(test)),
+                payoutMetrics, textAccuracy, featureWeights(fraudModel));
         registry.publish(new TrainedModels(fraudScaler, fraudModel, payoutScaler, payoutModel, causeModel, baseline, report));
-        log.info("Claim models trained: fraud AUC {}, payout R2 {}, text accuracy {}",
-                round(fraudMetrics.rocAuc()), round(payoutMetrics.rSquared()), round(textAccuracy));
+        log.info("Claim models trained: fraud AUC {} ({} without the graph feature), payout R2 {}, text accuracy {}",
+                round(fraudMetrics.rocAuc()), round(report.fraudAucWithoutGraph()), round(payoutMetrics.rSquared()),
+                round(textAccuracy));
         events.publishEvent(new ModelsTrainedEvent(report));
         return report;
+    }
+
+    // Same split, same settings, one column fewer: the gap is what the graph feature added on this data.
+    private double holdoutAucWithoutGraph(double[][] trainX, int[] trainY, double[][] testX, int[] testY) {
+        double[][] train = withoutColumn(trainX, ClaimFeatures.GRAPH_FEATURE);
+        double[][] test = withoutColumn(testX, ClaimFeatures.GRAPH_FEATURE);
+        StandardScaler scaler = StandardScaler.fit(train);
+        LogisticRegression model = LogisticRegression.fit(scaler.transformAll(train), trainY,
+                LogisticRegression.Options.defaults());
+        double[] scores = IntStream.range(0, test.length).mapToDouble(i -> model.probability(scaler.transform(test[i])))
+                .toArray();
+        return ClassificationMetrics.evaluate(scores, testY, threshold).rocAuc();
+    }
+
+    private static double[][] withoutColumn(double[][] rows, int column) {
+        return Arrays.stream(rows).map(row -> IntStream.range(0, row.length).filter(j -> j != column)
+                .mapToDouble(j -> row[j]).toArray()).toArray(double[][]::new);
     }
 
     private double crossValidatedAuc(double[][] x, int[] y) {

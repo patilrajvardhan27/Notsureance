@@ -11,6 +11,7 @@ public record ModelReport(
         int feedbackSamples,
         ClassificationMetrics fraudHoldout,
         double fraudCrossValidatedAuc,
+        double fraudAucWithoutGraph,
         RegressionMetrics payoutHoldout,
         double causeTextAccuracy,
         List<FeatureWeight> fraudFeatureWeights) {

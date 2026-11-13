@@ -16,7 +16,10 @@ public final class ClaimFeatures {
             "Description does not match the stated cause",
             "Incident happened on a weekend",
             "Very short description",
-            "Cause is commonly linked to staged losses");
+            "Cause is commonly linked to staged losses",
+            "Linked to confirmed fraud through a shared phone, payout account or repair shop");
+
+    public static final int GRAPH_FEATURE = 10;
 
     private ClaimFeatures() {
     }
@@ -33,7 +36,8 @@ public final class ClaimFeatures {
                 1.0 - statedCauseTextProbability,
                 s.weekendIncident() ? 1 : 0,
                 words < 8 ? 1 : 0,
-                s.cause().isHighRisk() ? 1 : 0
+                s.cause().isHighRisk() ? 1 : 0,
+                Math.min(s.linkedConfirmedFraud(), 3)
         };
     }
 

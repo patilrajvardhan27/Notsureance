@@ -17,24 +17,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FraudGraphService {
 
-    private static final Logger log = LoggerFactory.getLogger(FraudGraphService.class);
-
     private final FraudGraphRepository graph;
     private final ClaimService claimService;
-    private final GraphProperties properties;
 
-    public FraudGraphService(FraudGraphRepository graph, ClaimService claimService, GraphProperties properties) {
+    public FraudGraphService(FraudGraphRepository graph, ClaimService claimService) {
         this.graph = graph;
         this.claimService = claimService;
-        this.properties = properties;
     }
 
     @Transactional(readOnly = true)
@@ -45,21 +39,7 @@ public class FraudGraphService {
 
     public LinkedParties linkedPartiesFor(String policyNumber) {
         List<LinkedParty> parties = guarded(() -> graph.linkedParties(policyNumber));
-        long flagged = parties.stream().filter(p -> p.hops() <= 2).mapToLong(LinkedParty::flaggedClaims).sum();
-        return new LinkedParties(policyNumber, parties, flagged);
-    }
-
-    // Scoring must never fail because the graph is down, so this one quietly falls back to zero.
-    public int flaggedClaimsNear(String policyNumber) {
-        if (!properties.enabled()) {
-            return 0;
-        }
-        try {
-            return (int) Math.min(Integer.MAX_VALUE, linkedPartiesFor(policyNumber).flaggedWithinTwoHops());
-        } catch (GraphUnavailableException ex) {
-            log.debug("Graph lookup skipped for {}: {}", policyNumber, ex.getMessage());
-            return 0;
-        }
+        return new LinkedParties(policyNumber, parties, GraphViews.flaggedWithinTwoHops(parties));
     }
 
     public List<FraudRing> rings() {

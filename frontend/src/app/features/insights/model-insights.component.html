@@ -5,7 +5,7 @@
       <h1>Model insights</h1>
       @if (report(); as r) {
         <p class="muted">Trained {{ r.trainedAt | date: 'medium' }} on {{ r.syntheticSamples | number }} synthetic claims
-          and {{ r.feedbackSamples }} real adjuster decisions. Retrains nightly.</p>
+          and {{ r.feedbackSamples }} adjuster decisions. Retrains nightly. <app-synthetic-note /></p>
       }
     </div>
     <span class="spacer"></span>
@@ -17,7 +17,8 @@
   @if (report(); as r) {
     <div class="grid grid-4 kpis">
       <app-kpi-card label="Fraud ROC AUC (holdout)" [value]="r.fraudHoldout.rocAuc" format="percent" />
-      <app-kpi-card label="Fraud AUC (5-fold CV)" [value]="r.fraudCrossValidatedAuc" format="percent" accent="sky" />
+      <app-kpi-card label="Fraud AUC without the graph" [value]="r.fraudAucWithoutGraph" format="percent" accent="sky"
+                    [hint]="'5-fold CV with it: ' + (r.fraudCrossValidatedAuc | percent: '1.1-1')" />
       <app-kpi-card label="Fraud recall" [value]="r.fraudHoldout.recall" format="percent" accent="warning"
                     hint="Share of fraud the model catches" />
       <app-kpi-card label="Payout model R²" [value]="r.payoutHoldout.rSquared" format="percent" accent="success"

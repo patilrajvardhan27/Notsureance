@@ -5,11 +5,12 @@ import { ModelReport, Segment } from '../../core/models/insight.models';
 import { ToastService } from '../../core/ui/toast.service';
 import { listStagger } from '../../shared/animations';
 import { KpiCardComponent } from '../../shared/components/kpi-card.component';
+import { SyntheticNoteComponent } from '../../shared/components/synthetic-note.component';
 
 @Component({
   selector: 'app-model-insights',
   standalone: true,
-  imports: [KpiCardComponent, DatePipe, DecimalPipe, PercentPipe],
+  imports: [KpiCardComponent, SyntheticNoteComponent, DatePipe, DecimalPipe, PercentPipe],
   animations: [listStagger],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './model-insights.component.html',

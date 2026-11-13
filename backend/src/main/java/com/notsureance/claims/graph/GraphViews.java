@@ -23,4 +23,8 @@ public final class GraphViews {
 
     record SharedPair(String left, String right, List<String> shared) {
     }
+
+    static long flaggedWithinTwoHops(List<LinkedParty> parties) {
+        return parties.stream().filter(p -> p.hops() <= 2).mapToLong(LinkedParty::flaggedClaims).sum();
+    }
 }

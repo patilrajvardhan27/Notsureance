@@ -18,6 +18,7 @@ export interface ModelReport {
   feedbackSamples: number;
   fraudHoldout: ClassificationMetrics;
   fraudCrossValidatedAuc: number;
+  fraudAucWithoutGraph: number;
   payoutHoldout: { meanAbsoluteError: number; rootMeanSquaredError: number; rSquared: number };
   causeTextAccuracy: number;
   fraudFeatureWeights: { feature: string; weight: number }[];

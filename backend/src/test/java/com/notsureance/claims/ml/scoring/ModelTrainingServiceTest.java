@@ -37,6 +37,7 @@ class ModelTrainingServiceTest {
         assertThat(report.payoutHoldout().rSquared()).isGreaterThan(0.5);
         assertThat(report.fraudHoldout().recall()).isGreaterThan(0.6);
         assertThat(report.fraudFeatureWeights()).hasSize(ClaimFeatures.FRAUD_FEATURE_LABELS.size());
+        assertThat(report.fraudAucWithoutGraph()).isBetween(0.5, 1.0);
     }
 
     @Test
@@ -63,6 +64,6 @@ class ModelTrainingServiceTest {
 
     private static ClaimSignals signals(LossCause cause, double loss, long tenure, long delay, boolean gps, String text) {
         return new ClaimSignals(EquipmentCategory.TRACTOR, cause, loss, 190_000, 2_500, 1_000_000, 6, 3_000, gps,
-                tenure, delay, 0, LocalDate.of(2026, 9, 23), false, text);
+                tenure, delay, 0, LocalDate.of(2026, 9, 23), false, text, 0);
     }
 }
