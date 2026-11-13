@@ -52,6 +52,15 @@ public class Policy extends BaseEntity {
     @JoinColumn(name = "agent_id")
     private AppUser agent;
 
+    @Column(name = "holder_phone")
+    private String holderPhone;
+
+    @Column(name = "payout_account_hash")
+    private String payoutAccountHash;
+
+    @Column(name = "annual_premium")
+    private BigDecimal annualPremium;
+
     protected Policy() {
     }
 
@@ -105,5 +114,17 @@ public class Policy extends BaseEntity {
 
     public AppUser getAgent() {
         return agent;
+    }
+
+    public String getHolderPhone() {
+        return holderPhone;
+    }
+
+    public String getPayoutAccountHash() {
+        return payoutAccountHash;
+    }
+
+    public BigDecimal getAnnualPremium() {
+        return annualPremium;
     }
 }

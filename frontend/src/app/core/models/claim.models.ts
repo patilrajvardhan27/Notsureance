@@ -75,6 +75,7 @@ export interface ClaimDetail {
   filedBy: string;
   assignedAdjuster: string | null;
   decisionReason: string | null;
+  repairDealer: string | null;
   assessment: ClaimAssessment;
   timeline: TimelineEntry[];
   nextStatuses: ClaimStatus[];
@@ -90,6 +91,7 @@ export interface FileClaimRequest {
   latitude?: number | null;
   longitude?: number | null;
   harvestCritical: boolean;
+  repairDealer?: string | null;
 }
 
 export interface DecisionRequest {

@@ -1,6 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { DashboardStats, ModelReport, Neighborhood, Segment } from '../models/insight.models';
+import {
+  DashboardStats,
+  FraudRing,
+  LinkedParties,
+  ModelReport,
+  Neighborhood,
+  Segment,
+} from '../models/insight.models';
 import { EquipmentView, PolicySummary } from '../models/policy.models';
 import { Lead, LeadReceipt, LeadRequest, LeadStatus, QuoteRequest, QuoteResult } from '../models/quote.models';
 
@@ -46,6 +53,14 @@ export class PlatformApi {
 
   segments() {
     return this.http.get<Segment[]>('/api/ml/segments');
+  }
+
+  linkedParties(claimId: number) {
+    return this.http.get<LinkedParties>(`/api/claims/${claimId}/linked-parties`);
+  }
+
+  fraudRings() {
+    return this.http.get<FraudRing[]>('/api/fraud/rings');
   }
 
   similarClaims(claimId: number) {

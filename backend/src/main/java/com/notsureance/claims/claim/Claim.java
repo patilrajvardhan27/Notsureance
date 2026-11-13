@@ -74,6 +74,9 @@ public class Claim extends BaseEntity {
     @Column(name = "harvest_critical", nullable = false)
     private boolean harvestCritical;
 
+    @Column(name = "repair_dealer")
+    private String repairDealer;
+
     @Embedded
     private ClaimScore score = new ClaimScore();
 
@@ -102,10 +105,11 @@ public class Claim extends BaseEntity {
         this.estimatedLoss = estimatedLoss;
     }
 
-    public void locateAt(BigDecimal latitude, BigDecimal longitude, boolean harvestCritical) {
+    public void locateAt(BigDecimal latitude, BigDecimal longitude, boolean harvestCritical, String repairDealer) {
         this.incidentLatitude = latitude;
         this.incidentLongitude = longitude;
         this.harvestCritical = harvestCritical;
+        this.repairDealer = repairDealer == null || repairDealer.isBlank() ? null : repairDealer.trim();
     }
 
     public ClaimStatus moveTo(ClaimStatus target) {
@@ -189,6 +193,10 @@ public class Claim extends BaseEntity {
 
     public boolean isHarvestCritical() {
         return harvestCritical;
+    }
+
+    public String getRepairDealer() {
+        return repairDealer;
     }
 
     public ClaimScore getScore() {

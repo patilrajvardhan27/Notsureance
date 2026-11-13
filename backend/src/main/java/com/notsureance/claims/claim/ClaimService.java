@@ -7,6 +7,7 @@ import com.notsureance.claims.claim.ClaimViews.TimelineEntry;
 import com.notsureance.claims.common.BusinessRuleException;
 import com.notsureance.claims.common.NotFoundException;
 import com.notsureance.claims.common.PageView;
+import com.notsureance.claims.graph.OutboxPublisher;
 import com.notsureance.claims.ml.scoring.ClaimAssessment;
 import com.notsureance.claims.ml.scoring.ClaimScoringService;
 import com.notsureance.claims.policy.Equipment;
@@ -37,11 +38,12 @@ public class ClaimService {
     private final ClaimScoringService scoring;
     private final ClaimSignalsFactory signalsFactory;
     private final ClaimNumberGenerator numbers;
+    private final OutboxPublisher outbox;
     private final Clock clock;
 
     public ClaimService(ClaimRepository claims, ClaimEventRepository events, PolicyService policyService,
                         UserRepository users, ClaimScoringService scoring, ClaimSignalsFactory signalsFactory,
-                        ClaimNumberGenerator numbers, Clock clock) {
+                        ClaimNumberGenerator numbers, OutboxPublisher outbox, Clock clock) {
         this.claims = claims;
         this.events = events;
         this.policyService = policyService;
@@ -49,6 +51,7 @@ public class ClaimService {
         this.scoring = scoring;
         this.signalsFactory = signalsFactory;
         this.numbers = numbers;
+        this.outbox = outbox;
         this.clock = clock;
     }
 
@@ -61,13 +64,14 @@ public class ClaimService {
         AppUser agent = users.getReferenceById(user.id());
         Claim claim = new Claim(numbers.next(), policy, equipment, agent, request.cause(), request.incidentDate(),
                 clock.instant(), request.description().trim(), request.estimatedLoss());
-        claim.locateAt(request.latitude(), request.longitude(), request.harvestCritical());
+        claim.locateAt(request.latitude(), request.longitude(), request.harvestCritical(), request.repairDealer());
 
         ClaimAssessment assessment = scoring.assess(signalsFactory.from(claim));
         claim.applyScore(ClaimScore.from(assessment));
         claims.save(claim);
         events.save(new ClaimEvent(claim, agent, ClaimEventType.FILED, null, ClaimStatus.SUBMITTED, null));
         events.save(new ClaimEvent(claim, null, ClaimEventType.SCORED, null, null, describe(assessment)));
+        outbox.claimChanged(claim.getId(), "FILED");
         return toDetail(claim, assessment, user);
     }
 
@@ -103,7 +107,7 @@ public class ClaimService {
                 EquipmentView.from(claim.getEquipment()), claim.getDescription(), claim.getReportedAt(),
                 claim.getApprovedAmount(), claim.getIncidentLatitude(), claim.getIncidentLongitude(),
                 claim.getFiledBy().getFullName(), adjuster == null ? null : adjuster.getFullName(),
-                claim.getDecisionReason(), assessment, timeline, nextStatusesFor(claim, user));
+                claim.getDecisionReason(), claim.getRepairDealer(), assessment, timeline, nextStatusesFor(claim, user));
     }
 
     private static Set<ClaimStatus> nextStatusesFor(Claim claim, AuthenticatedUser user) {

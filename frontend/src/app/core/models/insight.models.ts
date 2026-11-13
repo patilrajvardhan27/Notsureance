@@ -58,3 +58,26 @@ export interface DashboardStats {
   fastTrackShare: number;
   newLeads: number;
 }
+
+export interface LinkedParty {
+  claimantKey: string;
+  name: string;
+  hops: number;
+  via: string[];
+  claims: number;
+  flaggedClaims: number;
+  claimedAmount: number;
+}
+
+export interface LinkedParties {
+  policyNumber: string;
+  parties: LinkedParty[];
+  flaggedWithinTwoHops: number;
+}
+
+export interface FraudRing {
+  members: { claimantKey: string; name: string; claims: number; flaggedClaims: number; claimedAmount: number }[];
+  sharedIdentifiers: string[];
+  totalClaimed: number;
+  flaggedClaims: number;
+}

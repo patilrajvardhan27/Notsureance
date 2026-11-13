@@ -13,12 +13,14 @@ import { ClaimInsightComponent } from './detail/claim-insight.component';
 import { ClaimTimelineComponent } from './detail/claim-timeline.component';
 import { DecisionPanelComponent } from './detail/decision-panel.component';
 import { DocumentPanelComponent } from './detail/document-panel.component';
+import { LinkedPartiesComponent } from './detail/linked-parties.component';
 
 @Component({
   selector: 'app-claim-detail',
   standalone: true,
   imports: [RouterLink, CurrencyPipe, DatePipe, LabelPipe, StatusBadgeComponent, EmptyStateComponent,
-    ClaimInsightComponent, ClaimTimelineComponent, DecisionPanelComponent, DocumentPanelComponent],
+    ClaimInsightComponent, ClaimTimelineComponent, DecisionPanelComponent, DocumentPanelComponent,
+    LinkedPartiesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-detail.component.html',
   styleUrl: './claim-detail.component.scss',
@@ -46,7 +48,7 @@ export class ClaimDetailComponent {
       next: (detail) => this.claim.set(detail),
       error: () => this.missing.set(true),
     });
-    if (this.auth.hasRole('ADJUSTER')) {
+    if (this.auth.hasRole('ADJUSTER', 'MANAGER')) {
       this.platform.similarClaims(id).subscribe((near) => this.neighborhood.set(near));
     }
   }

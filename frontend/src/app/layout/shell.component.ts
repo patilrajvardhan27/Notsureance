@@ -20,6 +20,7 @@ const LINKS: NavLink[] = [
   { path: '/claims', label: 'Track claims', roles: ['AGENT', 'ADJUSTER', 'MANAGER'] },
   { path: '/queue', label: 'Approval queue', roles: ['ADJUSTER'] },
   { path: '/leads', label: 'Leads', roles: ['AGENT'] },
+  { path: '/rings', label: 'Fraud rings', roles: ['ADJUSTER', 'MANAGER'] },
   { path: '/insights', label: 'Model insights', roles: ['ADJUSTER', 'MANAGER'] },
 ];
 

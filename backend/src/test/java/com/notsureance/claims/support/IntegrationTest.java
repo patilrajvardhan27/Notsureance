@@ -10,6 +10,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SpringBootTest(properties = {"app.ml.synthetic-samples=1200", "app.security.requests-per-minute=5",
@@ -28,8 +29,12 @@ public abstract class IntegrationTest {
     @ServiceConnection
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
+    @ServiceConnection
+    static final Neo4jContainer<?> NEO4J = new Neo4jContainer<>("neo4j:5").withoutAuthentication();
+
     static {
         POSTGRES.start();
+        NEO4J.start();
     }
 
     @Autowired

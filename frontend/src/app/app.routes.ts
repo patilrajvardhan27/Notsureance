@@ -52,6 +52,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/leads/leads.component').then((m) => m.LeadsComponent),
       },
       {
+        path: 'rings',
+        data: { page: 'rings' },
+        canActivate: [roleGuard('ADJUSTER', 'MANAGER')],
+        loadComponent: () => import('./features/rings/fraud-rings.component').then((m) => m.FraudRingsComponent),
+      },
+      {
         path: 'insights',
         data: { page: 'insights' },
         canActivate: [roleGuard('ADJUSTER', 'MANAGER')],

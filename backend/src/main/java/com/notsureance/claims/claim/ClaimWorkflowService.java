@@ -4,6 +4,7 @@ import com.notsureance.claims.claim.ClaimRequests.Decision;
 import com.notsureance.claims.claim.ClaimRequests.InfoResponse;
 import com.notsureance.claims.claim.ClaimViews.ClaimDetail;
 import com.notsureance.claims.common.BusinessRuleException;
+import com.notsureance.claims.graph.OutboxPublisher;
 import com.notsureance.claims.ml.scoring.ClaimScoringService;
 import com.notsureance.claims.security.AuthenticatedUser;
 import com.notsureance.claims.user.AppUser;
@@ -21,14 +22,17 @@ public class ClaimWorkflowService {
     private final UserRepository users;
     private final ClaimScoringService scoring;
     private final ClaimSignalsFactory signalsFactory;
+    private final OutboxPublisher outbox;
 
     public ClaimWorkflowService(ClaimService claimService, ClaimEventRepository events, UserRepository users,
-                                ClaimScoringService scoring, ClaimSignalsFactory signalsFactory) {
+                                ClaimScoringService scoring, ClaimSignalsFactory signalsFactory,
+                                OutboxPublisher outbox) {
         this.claimService = claimService;
         this.events = events;
         this.users = users;
         this.scoring = scoring;
         this.signalsFactory = signalsFactory;
+        this.outbox = outbox;
     }
 
     public ClaimDetail decide(Long claimId, Decision decision, AuthenticatedUser user) {
@@ -55,6 +59,7 @@ public class ClaimWorkflowService {
         };
         ClaimStatus previous = claim.moveTo(target);
         events.save(new ClaimEvent(claim, adjuster, ClaimEventType.STATUS_CHANGED, previous, target, note));
+        outbox.claimChanged(claim.getId(), "STATUS_CHANGED");
         return claimService.toDetail(claim, scoring.assess(signalsFactory.from(claim)), user);
     }
 
@@ -67,6 +72,7 @@ public class ClaimWorkflowService {
         ClaimStatus previous = claim.moveTo(ClaimStatus.UNDER_REVIEW);
         events.save(new ClaimEvent(claim, agent, ClaimEventType.INFO_PROVIDED, previous, ClaimStatus.UNDER_REVIEW,
                 response.note().trim()));
+        outbox.claimChanged(claim.getId(), "INFO_PROVIDED");
         return claimService.toDetail(claim, scoring.assess(signalsFactory.from(claim)), user);
     }
 

@@ -51,6 +51,7 @@ export class FileClaimComponent {
     estimatedLoss: [null as number | null, [Validators.required, Validators.min(100), Validators.max(5_000_000)]],
     latitude: [null as number | null],
     longitude: [null as number | null],
+    repairDealer: ['', [Validators.maxLength(120)]],
   });
 
   private readonly values = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
@@ -126,6 +127,7 @@ export class FileClaimComponent {
         latitude: value.latitude,
         longitude: value.longitude,
         harvestCritical: !!value.harvestCritical,
+        repairDealer: value.repairDealer?.trim() || null,
       })
       .subscribe({
         next: (detail) => {

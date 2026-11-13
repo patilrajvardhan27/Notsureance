@@ -27,6 +27,11 @@ spring:
   threads:
     virtual:
       enabled: true
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:}
 
 server:
   port: ${PORT:8080}
@@ -67,6 +72,11 @@ app:
     fast-track-max-fraud: 0.2
     investigation-min-fraud: 0.4
     anomaly-threshold: 2.5
+  graph:
+    enabled: ${GRAPH_ENABLED:true}
+    batch-size: 50
+    max-attempts: 5
+    sync-delay-ms: 5000
   ml:
     synthetic-samples: 3000
     retrain-cron: "0 0 3 * * *"

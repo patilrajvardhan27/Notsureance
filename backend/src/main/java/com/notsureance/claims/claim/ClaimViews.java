@@ -39,7 +39,7 @@ public final class ClaimViews {
 
     public record ClaimDetail(ClaimSummary summary, PolicySummary policy, EquipmentView equipment, String description,
                               Instant reportedAt, BigDecimal approvedAmount, BigDecimal latitude, BigDecimal longitude,
-                              String filedBy, String assignedAdjuster, String decisionReason,
+                              String filedBy, String assignedAdjuster, String decisionReason, String repairDealer,
                               ClaimAssessment assessment, List<TimelineEntry> timeline, Set<ClaimStatus> nextStatuses) {
     }
 }

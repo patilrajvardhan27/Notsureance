@@ -100,6 +100,11 @@
                 }
               </div>
               <div class="field">
+                <label for="repairDealer">Repair shop or dealer (optional)</label>
+                <input id="repairDealer" class="input" formControlName="repairDealer" maxlength="120"
+                       placeholder="Who will fix or inspect the machine" />
+              </div>
+              <div class="field">
                 <label>Where did it happen?</label>
                 <button type="button" class="btn btn-outline" (click)="useMyLocation()" [disabled]="locating()">
                   {{ locating() ? 'Finding you…' : form.value.latitude ? 'Location captured' : 'Use my current location' }}

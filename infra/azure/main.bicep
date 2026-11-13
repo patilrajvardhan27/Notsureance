@@ -32,6 +32,16 @@ param entraApiScopes string
 @description('Default domain of the tenant, used to map the demo users')
 param demoEmailDomain string = 'notsureance.dev'
 
+@description('Bolt URI of the Neo4j graph, for example an AuraDB instance. Leave empty to switch the graph off.')
+param neo4jUri string = ''
+
+@description('Neo4j user name')
+param neo4jUsername string = 'neo4j'
+
+@secure()
+@description('Neo4j password')
+param neo4jPassword string = ''
+
 @description('Load the demo farms, claims and accounts. Keep false for real environments.')
 param seedDemoData bool = false
 
@@ -133,6 +143,10 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'DEMO_EMAIL_DOMAIN', value: demoEmailDomain }
         { name: 'ALLOWED_ORIGINS', value: 'https://${appName}.azurewebsites.net' }
         { name: 'FLYWAY_LOCATIONS', value: flywayLocations }
+        { name: 'GRAPH_ENABLED', value: empty(neo4jUri) ? 'false' : 'true' }
+        { name: 'NEO4J_URI', value: neo4jUri }
+        { name: 'NEO4J_USERNAME', value: neo4jUsername }
+        { name: 'NEO4J_PASSWORD', value: neo4jPassword }
       ]
     }
   }

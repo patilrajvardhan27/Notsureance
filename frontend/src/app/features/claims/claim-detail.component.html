@@ -27,6 +27,7 @@
             <div><dt>Deductible</dt><dd class="money">{{ c.policy.deductible | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
             <div><dt>Insured value</dt><dd class="money">{{ c.equipment.insuredValue | currency: 'USD' : 'symbol' : '1.0-0' }}</dd></div>
             <div><dt>GPS tracked</dt><dd>{{ c.equipment.gpsTracked ? 'Yes' : 'No' }}</dd></div>
+            <div><dt>Repair shop</dt><dd>{{ c.repairDealer ?? 'Not chosen' }}</dd></div>
             <div><dt>Filed by</dt><dd>{{ c.filedBy }}</dd></div>
             <div><dt>Adjuster</dt><dd>{{ c.assignedAdjuster ?? 'Not assigned' }}</dd></div>
             @if (c.latitude !== null) {
@@ -38,8 +39,9 @@
           }
         </article>
 
-        @if (auth.hasRole('ADJUSTER')) {
+        @if (auth.hasRole('ADJUSTER', 'MANAGER')) {
           <app-claim-insight [assessment]="c.assessment" [statedCause]="c.summary.cause" [neighborhood]="neighborhood()" />
+          <app-linked-parties [claimId]="c.summary.id" />
         }
 
         <article class="card">
