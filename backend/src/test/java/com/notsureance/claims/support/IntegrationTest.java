@@ -17,7 +17,7 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest(properties = {"app.ml.synthetic-samples=1200", "app.security.requests-per-minute=5",
         "app.security.entra.tenant-id=" + TestTokens.TENANT, "app.security.entra.audiences=" + TestTokens.AUDIENCE,
         "app.security.entra.spa-client-id=test-spa", "app.security.entra.api-scopes=api://notsureance-test/claims.read"})
-@Import(TestJwtConfig.class)
+@Import({TestJwtConfig.class, TestAgentConfig.class})
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public abstract class IntegrationTest {

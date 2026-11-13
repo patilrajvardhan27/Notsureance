@@ -6,5 +6,6 @@ public enum ClaimEventType {
     ASSIGNED,
     STATUS_CHANGED,
     INFO_PROVIDED,
-    DOCUMENT_ADDED
+    DOCUMENT_ADDED,
+    AGENT_RECOMMENDED
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import com.notsureance.claims.agent.AgentUnavailableException;
+import com.notsureance.claims.agent.model.AgentModelException;
 import com.notsureance.claims.graph.GraphUnavailableException;
 import com.notsureance.claims.security.RateLimitExceededException;
 import org.slf4j.Logger;
@@ -39,6 +41,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail handleAccessDenied() {
         return problem(HttpStatus.FORBIDDEN, "You do not have access to this resource");
+    }
+
+    @ExceptionHandler(AgentUnavailableException.class)
+    ProblemDetail handleAgentOff(AgentUnavailableException ex) {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(AgentModelException.class)
+    ProblemDetail handleModelError(AgentModelException ex) {
+        return problem(HttpStatus.BAD_GATEWAY, ex.getMessage());
     }
 
     @ExceptionHandler(GraphUnavailableException.class)
