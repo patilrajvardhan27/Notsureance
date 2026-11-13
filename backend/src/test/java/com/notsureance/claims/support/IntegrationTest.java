@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(properties = {"app.ml.synthetic-samples=1200", "app.security.requests-per-minute=5",
         "app.security.entra.tenant-id=" + TestTokens.TENANT, "app.security.entra.audiences=" + TestTokens.AUDIENCE,
@@ -27,7 +28,8 @@ public abstract class IntegrationTest {
     protected static final String MANAGER = "manager@notsureance.dev";
 
     @ServiceConnection
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
+            DockerImageName.parse("pgvector/pgvector:pg16").asCompatibleSubstituteFor("postgres"));
 
     @ServiceConnection
     static final Neo4jContainer<?> NEO4J = new Neo4jContainer<>("neo4j:5").withoutAuthentication();

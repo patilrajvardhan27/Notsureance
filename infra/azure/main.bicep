@@ -87,9 +87,19 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   }
 }
 
+resource vectorExtension 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2022-12-01' = {
+  parent: database
+  name: 'azure.extensions'
+  properties: {
+    value: 'VECTOR'
+    source: 'user-override'
+  }
+}
+
 resource claimsDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2022-12-01' = {
   parent: database
   name: 'notsureance'
+  dependsOn: [vectorExtension]
 }
 
 resource allowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2022-12-01' = {

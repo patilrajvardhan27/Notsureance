@@ -72,6 +72,8 @@ app:
     fast-track-max-fraud: 0.2
     investigation-min-fraud: 0.4
     anomaly-threshold: 2.5
+  rag:
+    embedder: ${RAG_EMBEDDER:hashing}
   graph:
     enabled: ${GRAPH_ENABLED:true}
     batch-size: 50
