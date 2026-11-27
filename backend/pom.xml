@@ -23,7 +23,7 @@
         <dependency-check.version>12.2.2</dependency-check.version>
         <jacoco.version>0.8.14</jacoco.version>
         <spring-ai.version>1.1.8</spring-ai.version>
-        <anthropic.version>3.8.0</anthropic.version>
+        <anthropic.version>3.13.0</anthropic.version>
     </properties>
 
     <dependencyManagement>
